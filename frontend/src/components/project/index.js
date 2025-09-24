@@ -4,3 +4,8 @@ export { default as ProjectOverview } from './ProjectOverview';
 export { default as ActivityTimeline } from './ActivityTimeline';
 export { default as ProjectLinks } from './ProjectLinks';
 export { default as ProjectFiles } from './ProjectFiles';
+export { default as ProjectStats } from './ProjectStats';
+export { default as ProjectFilters } from './ProjectFilters';
+export { default as ProjectCard } from './ProjectCard';
+export { default as ProjectsGrid } from './ProjectsGrid';
+export { default as CreateProjectModal } from './CreateProjectModal';
