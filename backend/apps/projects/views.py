@@ -5,8 +5,8 @@ from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
 
-from .models import Project, ProjectActivity, ProjectLink, ProjectLink, ProjectLink
-from .serializers import ProjectSerializer, ProjectActivitySerializer, ProjectLinkSerializer
+from .models import Project, ProjectActivity, ProjectLink, ProjectFile
+from .serializers import ProjectSerializer, ProjectActivitySerializer, ProjectLinkSerializer, ProjectFileSerializer
 
 def create_activity(project, user, activity_type, description, metadata=None):
     """Helper function to create project activities"""
@@ -430,6 +430,248 @@ class ProjectLinkDetailView(APIView):
             user=request.user,
             activity_type='updated',
             description=f'Removed link: {link_title}'
+        )
+        
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+class ProjectFileListCreateView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get(self, request, project_pk):
+        """Get files for a specific project"""
+        try:
+            project = Project.objects.get(
+                Q(pk=project_pk) & (Q(owner=request.user) | Q(members=request.user))
+            )
+        except Project.DoesNotExist:
+            return Response(
+                {"error": "Project not found or access denied"}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        files = project.files.filter(is_active=True)
+        serializer = ProjectFileSerializer(files, many=True)
+        return Response(serializer.data)
+    
+    def post(self, request, project_pk):
+        """Upload a new file to the project"""
+        try:
+            project = Project.objects.get(
+                Q(pk=project_pk) & (Q(owner=request.user) | Q(members=request.user))
+            )
+        except Project.DoesNotExist:
+            return Response(
+                {"error": "Project not found or access denied"}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        serializer = ProjectFileSerializer(data=request.data)
+        if serializer.is_valid():
+            file_obj = serializer.save(project=project, uploaded_by=request.user, is_active=True)
+            
+            # Create activity for file upload
+            create_activity(
+                project=project,
+                user=request.user,
+                activity_type='file_uploaded',
+                description=f'Uploaded file: {file_obj.title}',
+                metadata={'file_type': file_obj.file_type, 'file_name': file_obj.title}
+            )
+            
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class ProjectFileDetailView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get_object(self, pk, project_pk, user):
+        try:
+            project = Project.objects.get(
+                Q(pk=project_pk) & (Q(owner=user) | Q(members=user))
+            )
+            return project.files.get(pk=pk)
+        except (Project.DoesNotExist, ProjectFile.DoesNotExist):
+            return None
+    
+    def get(self, request, project_pk, pk):
+        """Get file details"""
+        file_obj = self.get_object(pk, project_pk, request.user)
+        if not file_obj:
+            return Response(
+                {"error": "File not found or access denied"}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        serializer = ProjectFileSerializer(file_obj)
+        return Response(serializer.data)
+    
+    def put(self, request, project_pk, pk):
+        """Update file metadata"""
+        file_obj = self.get_object(pk, project_pk, request.user)
+        if not file_obj:
+            return Response(
+                {"error": "File not found or access denied"}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        serializer = ProjectFileSerializer(file_obj, data=request.data, partial=True)
+        if serializer.is_valid():
+            updated_file = serializer.save()
+            
+            # Create activity for file update
+            create_activity(
+                project=file_obj.project,
+                user=request.user,
+                activity_type='updated',
+                description=f'Updated file: {updated_file.title}'
+            )
+            
+            return Response(serializer.data)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    def delete(self, request, project_pk, pk):
+        """Delete a file"""
+        file_obj = self.get_object(pk, project_pk, request.user)
+        if not file_obj:
+            return Response(
+                {"error": "File not found or access denied"}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        file_title = file_obj.title
+        
+        # Delete the actual file from storage
+        if file_obj.file:
+            try:
+                file_obj.file.delete(save=False)
+            except:
+                pass  # Continue even if file deletion fails
+        
+        file_obj.delete()
+        
+        # Create activity for file deletion
+        create_activity(
+            project=file_obj.project,
+            user=request.user,
+            activity_type='updated',
+            description=f'Deleted file: {file_title}'
+        )
+        
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+class ProjectFileListCreateView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get(self, request, project_pk):
+        """Get files for a specific project"""
+        try:
+            project = Project.objects.get(
+                Q(pk=project_pk) & (Q(owner=request.user) | Q(members=request.user))
+            )
+        except Project.DoesNotExist:
+            return Response(
+                {"error": "Project not found or access denied"}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        files = project.files.filter(is_active=True)
+        serializer = ProjectFileSerializer(files, many=True)
+        return Response(serializer.data)
+    
+    def post(self, request, project_pk):
+        """Upload a new file to the project"""
+        try:
+            project = Project.objects.get(
+                Q(pk=project_pk) & (Q(owner=request.user) | Q(members=request.user))
+            )
+        except Project.DoesNotExist:
+            return Response(
+                {"error": "Project not found or access denied"}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        serializer = ProjectFileSerializer(data=request.data)
+        if serializer.is_valid():
+            file_obj = serializer.save(project=project, uploaded_by=request.user, is_active=True)
+            
+            # Create activity for file upload
+            create_activity(
+                project=project,
+                user=request.user,
+                activity_type='file_uploaded',
+                description=f'Uploaded file: {file_obj.title}',
+                metadata={'file_type': file_obj.file_type, 'file_name': file_obj.title}
+            )
+            
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class ProjectFileDetailView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get_object(self, pk, project_pk, user):
+        try:
+            project = Project.objects.get(
+                Q(pk=project_pk) & (Q(owner=user) | Q(members=user))
+            )
+            return project.files.get(pk=pk)
+        except (Project.DoesNotExist, ProjectFile.DoesNotExist):
+            return None
+    
+    def put(self, request, project_pk, pk):
+        """Update file metadata"""
+        file_obj = self.get_object(pk, project_pk, request.user)
+        if not file_obj:
+            return Response(
+                {"error": "File not found or access denied"}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        serializer = ProjectFileSerializer(file_obj, data=request.data, partial=True)
+        if serializer.is_valid():
+            updated_file = serializer.save()
+            
+            # Create activity for file update
+            create_activity(
+                project=file_obj.project,
+                user=request.user,
+                activity_type='updated',
+                description=f'Updated file: {updated_file.title}'
+            )
+            
+            return Response(serializer.data)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    def delete(self, request, project_pk, pk):
+        """Delete a file"""
+        file_obj = self.get_object(pk, project_pk, request.user)
+        if not file_obj:
+            return Response(
+                {"error": "File not found or access denied"}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        file_title = file_obj.title
+        
+        # Delete the actual file from storage
+        if file_obj.file:
+            try:
+                file_obj.file.delete(save=False)
+            except:
+                pass  # Continue even if file deletion fails
+        
+        file_obj.delete()
+        
+        # Create activity for file deletion
+        create_activity(
+            project=file_obj.project,
+            user=request.user,
+            activity_type='updated',
+            description=f'Deleted file: {file_title}'
         )
         
         return Response(status=status.HTTP_204_NO_CONTENT)

@@ -102,7 +102,7 @@ class ProjectLink(models.Model):
     url = models.URLField()
     link_type = models.CharField(max_length=20, choices=LINK_TYPES, default='other')
     description = models.TextField(blank=True)
-    is_active = models.BooleanField(default=True)
+    is_active = models.BooleanField(default=True, help_text="Whether the file is active and visible")
     created_at = models.DateTimeField(auto_now_add=True)
     created_by = models.ForeignKey(User, on_delete=models.CASCADE)
     
@@ -111,3 +111,45 @@ class ProjectLink(models.Model):
     
     def __str__(self):
         return f"{self.title} - {self.project.title}"
+
+class ProjectFile(models.Model):
+    FILE_TYPES = [
+        ('document', 'Document'),
+        ('image', 'Image'),
+        ('video', 'Video'),
+        ('audio', 'Audio'),
+        ('archive', 'Archive'),
+        ('code', 'Code'),
+        ('other', 'Other'),
+    ]
+    
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='files')
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    file = models.FileField(upload_to='project_files/%Y/%m/%d/')
+    file_type = models.CharField(max_length=20, choices=FILE_TYPES, default='document')
+    file_size = models.BigIntegerField(help_text="File size in bytes")
+    uploaded_by = models.ForeignKey(User, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    is_active = models.BooleanField(default=True, help_text="Whether the file is active and visible")
+    
+    class Meta:
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"{self.title} - {self.project.title}"
+    
+    @property
+    def file_extension(self):
+        import os
+        return os.path.splitext(self.file.name)[1].lower()
+    
+    @property
+    def formatted_file_size(self):
+        """Return human-readable file size"""
+        for unit in ['bytes', 'KB', 'MB', 'GB']:
+            if self.file_size < 1024.0:
+                return f"{self.file_size:.1f} {unit}"
+            self.file_size /= 1024.0
+        return f"{self.file_size:.1f} TB"

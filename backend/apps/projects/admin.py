@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Project, ProjectActivity, ProjectLink
+from .models import Project, ProjectActivity, ProjectLink, ProjectFile
 
 @admin.register(Project)
 class ProjectAdmin(admin.ModelAdmin):
@@ -79,4 +79,30 @@ class ProjectLinkAdmin(admin.ModelAdmin):
     def save_model(self, request, obj, form, change):
         if not change:  # If creating new link
             obj.created_by = request.user
+        super().save_model(request, obj, form, change)
+
+@admin.register(ProjectFile)
+class ProjectFileAdmin(admin.ModelAdmin):
+    list_display = ['title', 'project', 'file_type', 'formatted_file_size', 'uploaded_by', 'created_at']
+    list_filter = ['file_type', 'is_active', 'created_at']
+    search_fields = ['title', 'description', 'project__title']
+    readonly_fields = ['file_size', 'file_extension', 'formatted_file_size', 'created_at', 'updated_at']
+    raw_id_fields = ['project', 'uploaded_by']
+    
+    fieldsets = (
+        ('File Information', {
+            'fields': ('project', 'title', 'description', 'file', 'file_type')
+        }),
+        ('Metadata', {
+            'fields': ('file_size', 'file_extension', 'formatted_file_size', 'is_active')
+        }),
+        ('Upload Info', {
+            'fields': ('uploaded_by', 'created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def save_model(self, request, obj, form, change):
+        if not change:  # If creating new file
+            obj.uploaded_by = request.user
         super().save_model(request, obj, form, change)

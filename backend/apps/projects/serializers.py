@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import Project, ProjectActivity, ProjectLink, ProjectLink, ProjectLink
+from .models import Project, ProjectActivity, ProjectLink, ProjectFile
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -91,9 +91,30 @@ class ProjectLinkSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'created_at', 'created_by']
 
-# Update ProjectSerializer to include links
-class ProjectDetailSerializer(ProjectSerializer):
-    links = ProjectLinkSerializer(many=True, read_only=True)
+class ProjectFileSerializer(serializers.ModelSerializer):
+    uploaded_by = UserSerializer(read_only=True)
+    file_extension = serializers.ReadOnlyField()
+    formatted_file_size = serializers.ReadOnlyField()
+    file_url = serializers.SerializerMethodField()
     
-    class Meta(ProjectSerializer.Meta):
-        fields = ProjectSerializer.Meta.fields + ['links']
+    class Meta:
+        model = ProjectFile
+        fields = [
+            'id', 'title', 'description', 'file', 'file_url', 'file_type', 
+            'file_size', 'file_extension', 'formatted_file_size',
+            'uploaded_by', 'created_at', 'updated_at', 'is_active'
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at', 'uploaded_by', 'file_size']
+    
+    def get_file_url(self, obj):
+        if obj.file:
+            return obj.file.url
+        return None
+    
+    def create(self, validated_data):
+        # Get file size from uploaded file
+        if 'file' in validated_data and validated_data['file']:
+            validated_data['file_size'] = validated_data['file'].size
+        # Ensure is_active is True by default
+        validated_data.setdefault('is_active', True)
+        return super().create(validated_data)

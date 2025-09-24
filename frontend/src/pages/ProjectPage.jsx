@@ -5,6 +5,7 @@ import ProjectEditForm from '../components/project/ProjectEditForm';
 import ProjectOverview from '../components/project/ProjectOverview';
 import ActivityTimeline from '../components/project/ActivityTimeline';
 import ProjectLinks from '../components/project/ProjectLinks';
+import ProjectFiles from '../components/project/ProjectFiles';
 
 const ProjectPage = ({ projectId, onBack }) => {
   const { user } = useAuth();
@@ -14,7 +15,6 @@ const ProjectPage = ({ projectId, onBack }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
 
-  // Fetch project details
   const fetchProject = async () => {
     try {
       setLoading(true);
@@ -46,7 +46,6 @@ const ProjectPage = ({ projectId, onBack }) => {
     }
   }, [projectId]);
 
-  // Update project
   const updateProject = async (updatedData) => {
     try {
       const response = await fetch(`http://localhost:8000/api/projects/${projectId}/`, {
@@ -74,7 +73,6 @@ const ProjectPage = ({ projectId, onBack }) => {
     }
   };
 
-  // Delete project
   const deleteProject = async () => {
     if (!window.confirm('Are you sure you want to delete this project? This action cannot be undone.')) {
       return;
@@ -138,7 +136,6 @@ const ProjectPage = ({ projectId, onBack }) => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
-      {/* Header */}
       <ProjectHeader 
         project={project}
         onBack={onBack}
@@ -148,7 +145,6 @@ const ProjectPage = ({ projectId, onBack }) => {
         isEditing={isEditing}
       />
 
-      {/* Tabs */}
       <div className="bg-gray-800/50 backdrop-blur-sm border-b border-gray-700/50">
         <div className="max-w-7xl mx-auto px-6">
           <nav className="flex space-x-8">
@@ -161,6 +157,16 @@ const ProjectPage = ({ projectId, onBack }) => {
               }`}
             >
               📊 Overview
+            </button>
+            <button
+              onClick={() => setActiveTab('files')}
+              className={`py-4 px-1 border-b-2 font-semibold text-sm transition-all duration-200 ${
+                activeTab === 'files'
+                  ? 'border-blue-500 text-blue-400'
+                  : 'border-transparent text-gray-400 hover:text-gray-300'
+              }`}
+            >
+              📁 Files
             </button>
             <button
               onClick={() => setActiveTab('links')}
@@ -186,7 +192,6 @@ const ProjectPage = ({ projectId, onBack }) => {
         </div>
       </div>
 
-      {/* Content */}
       <div className="max-w-7xl mx-auto px-6 py-8">
         {activeTab === 'overview' && (
           isEditing ? (
@@ -199,6 +204,7 @@ const ProjectPage = ({ projectId, onBack }) => {
             <ProjectOverview project={project} />
           )
         )}
+        {activeTab === 'files' && <ProjectFiles projectId={projectId} />}
         {activeTab === 'links' && <ProjectLinks projectId={projectId} />}
         {activeTab === 'activity' && <ActivityTimeline projectId={projectId} />}
       </div>
