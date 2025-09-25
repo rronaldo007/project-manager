@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import Project, ProjectMembership
+from .models import Project, ProjectMembership, ProjectFile, ProjectLink, ProjectActivity
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -37,4 +37,46 @@ class ProjectSerializer(serializers.ModelSerializer):
     
     def create(self, validated_data):
         validated_data['owner'] = self.context['request'].user
+        return super().create(validated_data)
+
+
+class ProjectFileSerializer(serializers.ModelSerializer):
+    uploaded_by = UserSerializer(read_only=True)
+    
+    class Meta:
+        model = ProjectFile
+        fields = ['id', 'title', 'file', 'description', 'file_size', 'file_type', 'uploaded_at', 'uploaded_by']
+        read_only_fields = ['file_size', 'file_type', 'uploaded_at', 'uploaded_by']
+    
+    def create(self, validated_data):
+        validated_data['uploaded_by'] = self.context['request'].user
+        file_obj = validated_data.get('file')
+        if file_obj:
+            validated_data['file_size'] = file_obj.size
+            validated_data['file_type'] = file_obj.content_type
+        return super().create(validated_data)
+
+
+class ProjectLinkSerializer(serializers.ModelSerializer):
+    created_by = UserSerializer(read_only=True)
+    
+    class Meta:
+        model = ProjectLink
+        fields = ['id', 'title', 'url', 'description', 'created_at', 'created_by']
+        read_only_fields = ['created_at', 'created_by']
+    
+    def create(self, validated_data):
+        validated_data['created_by'] = self.context['request'].user
+        return super().create(validated_data)
+
+class ProjectActivitySerializer(serializers.ModelSerializer):
+    user = UserSerializer(read_only=True)
+    
+    class Meta:
+        model = ProjectActivity
+        fields = ['id', 'action', 'description', 'created_at', 'user']
+        read_only_fields = ['created_at', 'user']
+    
+    def create(self, validated_data):
+        validated_data['user'] = self.context['request'].user
         return super().create(validated_data)

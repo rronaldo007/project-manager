@@ -26,3 +26,48 @@ class ProjectMembership(models.Model):
     
     def __str__(self):
         return f'{self.user.email} - {self.project.title} ({self.role})'
+    
+
+class ProjectFile(models.Model):
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='files')
+    title = models.CharField(max_length=255)
+    file = models.FileField(upload_to='project_files/')
+    description = models.TextField(blank=True)
+    file_size = models.IntegerField(default=0)
+    file_type = models.CharField(max_length=100, blank=True)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    uploaded_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='uploaded_files')
+    
+    class Meta:
+        ordering = ['-uploaded_at']
+    
+    def __str__(self):
+        return f'{self.title} - {self.project.title}'
+
+class ProjectLink(models.Model):
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='links')
+    title = models.CharField(max_length=255)
+    url = models.URLField()
+    description = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_links')
+    
+    class Meta:
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f'{self.title} - {self.project.title}'
+
+class ProjectActivity(models.Model):
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='activities')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='project_activities')
+    action = models.CharField(max_length=255)
+    description = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name_plural = 'Project Activities'
+    
+    def __str__(self):
+        return f'{self.project.title} - {self.action}'
