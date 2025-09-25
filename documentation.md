@@ -949,3 +949,733 @@ const useProjects = () => {
 - **Permission Checks**: Enforced at both view and object level
 
 This documentation covers all implemented endpoints and provides a foundation for future API extensions.
+
+# Topic System Endpoints
+
+## Overview
+Topics serve as knowledge containers within projects, allowing teams to organize research, documentation, media, discussions, and resources into focused areas. Each topic can contain notes, links, media files, comments, and organizational tags.
+
+## Topic Management Endpoints
+
+### List Project Topics
+Get all topics for a specific project.
+
+```
+GET /api/projects/{project_id}/topics/
+```
+
+**Authentication**: Required
+**Permissions**: User must have read access to the project
+
+**Response** (200 OK):
+```json
+[
+  {
+    "id": 1,
+    "title": "Research & Documentation",
+    "description": "Gather research materials and create documentation",
+    "color": "#3B82F6",
+    "created_at": "2025-09-25T14:00:00Z",
+    "updated_at": "2025-09-25T16:30:00Z",
+    "created_by": {
+      "id": 1,
+      "first_name": "John",
+      "last_name": "Doe",
+      "email": "john.doe@example.com"
+    },
+    "notes_count": 3,
+    "links_count": 5,
+    "media_count": 2,
+    "comments_count": 8,
+    "tags": [
+      {
+        "id": 1,
+        "name": "high-priority",
+        "color": "#EF4444",
+        "created_at": "2025-09-25T15:00:00Z"
+      }
+    ]
+  }
+]
+```
+
+### Create Topic
+Create a new topic within a project.
+
+```
+POST /api/projects/{project_id}/topics/
+```
+
+**Authentication**: Required
+**Permissions**: User must have write access to the project (owner or editor)
+
+**Request Body**:
+```json
+{
+  "title": "Design System",
+  "description": "UI components, design tokens, and style guidelines",
+  "color": "#10B981"
+}
+```
+
+**Response** (201 Created): Created topic object with same format as list response
+
+### Get Topic Details
+Retrieve comprehensive information about a specific topic including all related content.
+
+```
+GET /api/projects/{project_id}/topics/{topic_id}/
+```
+
+**Authentication**: Required
+**Permissions**: User must have read access to the project
+
+**Response** (200 OK):
+```json
+{
+  "id": 1,
+  "title": "Research & Documentation",
+  "description": "Comprehensive research and documentation phase",
+  "color": "#3B82F6",
+  "created_at": "2025-09-25T14:00:00Z",
+  "updated_at": "2025-09-25T16:30:00Z",
+  "created_by": {
+    "id": 1,
+    "first_name": "John",
+    "last_name": "Doe",
+    "email": "john.doe@example.com"
+  },
+  "notes_count": 3,
+  "links_count": 5,
+  "media_count": 2,
+  "comments_count": 8,
+  "tags": [...],
+  "notes": [...],
+  "topic_links": [...],
+  "media": [...],
+  "comments": [...]
+}
+```
+
+### Update Topic
+Modify topic information.
+
+```
+PATCH /api/projects/{project_id}/topics/{topic_id}/
+```
+
+**Authentication**: Required
+**Permissions**: User must have write access to the project
+
+**Request Body**:
+```json
+{
+  "description": "Updated comprehensive research and documentation phase",
+  "color": "#8B5CF6"
+}
+```
+
+**Response** (200 OK): Updated topic object
+
+### Delete Topic
+Permanently delete a topic and all its content.
+
+```
+DELETE /api/projects/{project_id}/topics/{topic_id}/
+```
+
+**Authentication**: Required
+**Permissions**: User must have write access to the project
+
+**Response** (204 No Content): Empty response
+
+## Topic Notes Endpoints
+
+### List Topic Notes
+Get all notes within a specific topic.
+
+```
+GET /api/projects/{project_id}/topics/{topic_id}/notes/
+```
+
+**Authentication**: Required
+**Permissions**: User must have read access to the project
+
+**Response** (200 OK):
+```json
+[
+  {
+    "id": 1,
+    "title": "API Requirements",
+    "content": "# API Requirements\n\n- User authentication\n- Project management\n- Topic system with notes\n- File uploads",
+    "created_at": "2025-09-25T14:30:00Z",
+    "updated_at": "2025-09-25T16:00:00Z",
+    "created_by": {
+      "id": 1,
+      "first_name": "John",
+      "last_name": "Doe",
+      "email": "john.doe@example.com"
+    },
+    "last_edited_by": {
+      "id": 2,
+      "first_name": "Jane",
+      "last_name": "Smith",
+      "email": "jane.smith@example.com"
+    }
+  }
+]
+```
+
+### Create Topic Note
+Add a new note to a topic.
+
+```
+POST /api/projects/{project_id}/topics/{topic_id}/notes/
+```
+
+**Authentication**: Required
+**Permissions**: User must have write access to the project
+
+**Request Body**:
+```json
+{
+  "title": "Meeting Notes - Sprint Planning",
+  "content": "## Sprint Planning Meeting\n\n### Key Decisions\n- Focus on authentication system\n- Implement topic management\n- Set up automated testing"
+}
+```
+
+**Response** (201 Created): Created note object
+
+### Get Note Details
+Retrieve a specific note.
+
+```
+GET /api/projects/{project_id}/topics/{topic_id}/notes/{note_id}/
+```
+
+**Response** (200 OK): Single note object with same format as list response
+
+### Update Note
+Modify an existing note.
+
+```
+PATCH /api/projects/{project_id}/topics/{topic_id}/notes/{note_id}/
+```
+
+**Request Body**:
+```json
+{
+  "content": "Updated note content with additional information..."
+}
+```
+
+**Response** (200 OK): Updated note object with last_edited_by updated
+
+### Delete Note
+Remove a note from a topic.
+
+```
+DELETE /api/projects/{project_id}/topics/{topic_id}/notes/{note_id}/
+```
+
+**Response** (204 No Content): Empty response
+
+## Topic Links Endpoints
+
+### List Topic Links
+Get all links within a specific topic.
+
+```
+GET /api/projects/{project_id}/topics/{topic_id}/links/
+```
+
+**Response** (200 OK):
+```json
+[
+  {
+    "id": 1,
+    "title": "Django REST Framework Docs",
+    "url": "https://www.django-rest-framework.org/",
+    "description": "Official DRF documentation for API development",
+    "link_type": "reference",
+    "created_at": "2025-09-25T15:00:00Z",
+    "created_by": {
+      "id": 1,
+      "first_name": "John",
+      "last_name": "Doe",
+      "email": "john.doe@example.com"
+    }
+  }
+]
+```
+
+### Create Topic Link
+Add a new link to a topic.
+
+```
+POST /api/projects/{project_id}/topics/{topic_id}/links/
+```
+
+**Request Body**:
+```json
+{
+  "title": "React Documentation",
+  "url": "https://reactjs.org/docs/getting-started.html",
+  "description": "Official React documentation and tutorials",
+  "link_type": "reference"
+}
+```
+
+**Link Types**: `reference`, `resource`, `tool`, `inspiration`, `other`
+
+**Response** (201 Created): Created link object
+
+### Update Topic Link
+Modify an existing topic link.
+
+```
+PATCH /api/projects/{project_id}/topics/{topic_id}/links/{link_id}/
+```
+
+### Delete Topic Link
+Remove a link from a topic.
+
+```
+DELETE /api/projects/{project_id}/topics/{topic_id}/links/{link_id}/
+```
+
+## Topic Media Endpoints
+
+### List Topic Media
+Get all media files within a specific topic.
+
+```
+GET /api/projects/{project_id}/topics/{topic_id}/media/
+```
+
+**Response** (200 OK):
+```json
+[
+  {
+    "id": 1,
+    "title": "Design Mockups",
+    "file": "/media/topic_media/mockups.png",
+    "media_type": "image",
+    "description": "UI mockups for the authentication flow",
+    "file_size": 1048576,
+    "duration": null,
+    "uploaded_at": "2025-09-25T14:45:00Z",
+    "uploaded_by": {
+      "id": 1,
+      "first_name": "John",
+      "last_name": "Doe",
+      "email": "john.doe@example.com"
+    }
+  },
+  {
+    "id": 2,
+    "title": "Team Meeting Recording",
+    "file": "/media/topic_media/meeting_recording.mp3",
+    "media_type": "audio",
+    "description": "Sprint planning meeting discussion",
+    "file_size": 15728640,
+    "duration": "01:23:45",
+    "uploaded_at": "2025-09-25T16:00:00Z",
+    "uploaded_by": {
+      "id": 2,
+      "first_name": "Jane",
+      "last_name": "Smith",
+      "email": "jane.smith@example.com"
+    }
+  }
+]
+```
+
+### Upload Topic Media
+Add a new media file to a topic.
+
+```
+POST /api/projects/{project_id}/topics/{topic_id}/media/
+```
+
+**Content-Type**: `multipart/form-data`
+
+**Request Body**:
+```
+title: Project Architecture Diagram
+file: [binary file data]
+description: High-level system architecture overview
+```
+
+**Media Types**: Automatically detected (`image`, `video`, `audio`, `document`, `other`)
+
+**Response** (201 Created): Created media object
+
+### Update Media Details
+Modify media file metadata.
+
+```
+PATCH /api/projects/{project_id}/topics/{topic_id}/media/{media_id}/
+```
+
+**Request Body**:
+```json
+{
+  "title": "Updated Architecture Diagram",
+  "description": "Updated system architecture with new components"
+}
+```
+
+### Delete Media File
+Remove a media file from a topic.
+
+```
+DELETE /api/projects/{project_id}/topics/{topic_id}/media/{media_id}/
+```
+
+**Response** (204 No Content): Empty response
+
+## Topic Comments Endpoints
+
+### List Topic Comments
+Get all comments for a specific topic.
+
+```
+GET /api/projects/{project_id}/topics/{topic_id}/comments/
+```
+
+**Response** (200 OK):
+```json
+[
+  {
+    "id": 1,
+    "content": "We should prioritize the authentication system first, then move to the topic features.",
+    "created_at": "2025-09-25T15:30:00Z",
+    "updated_at": "2025-09-25T15:30:00Z",
+    "author": {
+      "id": 1,
+      "first_name": "John",
+      "last_name": "Doe",
+      "email": "john.doe@example.com"
+    },
+    "parent": null,
+    "replies": [
+      {
+        "id": 2,
+        "content": "Agreed! Authentication is the foundation for everything else.",
+        "created_at": "2025-09-25T15:45:00Z",
+        "updated_at": "2025-09-25T15:45:00Z",
+        "author": {
+          "id": 2,
+          "first_name": "Jane",
+          "last_name": "Smith",
+          "email": "jane.smith@example.com"
+        },
+        "parent": 1,
+        "replies": []
+      }
+    ]
+  }
+]
+```
+
+### Create Topic Comment
+Add a new comment to a topic.
+
+```
+POST /api/projects/{project_id}/topics/{topic_id}/comments/
+```
+
+**Request Body**:
+```json
+{
+  "content": "Great progress on this topic! The documentation is very comprehensive.",
+  "parent": null
+}
+```
+
+For replies, include parent comment ID:
+```json
+{
+  "content": "Thanks! Still working on the technical specifications section.",
+  "parent": 1
+}
+```
+
+**Response** (201 Created): Created comment object
+
+### Update Comment
+Modify an existing comment (only by comment author).
+
+```
+PATCH /api/projects/{project_id}/topics/{topic_id}/comments/{comment_id}/
+```
+
+**Permissions**: Only the comment author can edit their comments
+
+**Request Body**:
+```json
+{
+  "content": "Updated comment with additional thoughts..."
+}
+```
+
+### Delete Comment
+Remove a comment from a topic.
+
+```
+DELETE /api/projects/{project_id}/topics/{topic_id}/comments/{comment_id}/
+```
+
+**Permissions**: Comment author or project owners/editors can delete comments
+
+**Response** (204 No Content): Empty response
+
+## Topic Tags Endpoints
+
+### List Topic Tags
+Get all tags for a specific topic.
+
+```
+GET /api/projects/{project_id}/topics/{topic_id}/tags/
+```
+
+**Response** (200 OK):
+```json
+[
+  {
+    "id": 1,
+    "name": "urgent",
+    "color": "#EF4444",
+    "created_at": "2025-09-25T15:00:00Z"
+  },
+  {
+    "id": 2,
+    "name": "frontend",
+    "color": "#3B82F6",
+    "created_at": "2025-09-25T15:15:00Z"
+  }
+]
+```
+
+### Create Topic Tag
+Add a new tag to a topic.
+
+```
+POST /api/projects/{project_id}/topics/{topic_id}/tags/
+```
+
+**Request Body**:
+```json
+{
+  "name": "backend",
+  "color": "#10B981"
+}
+```
+
+**Response** (201 Created): Created tag object
+
+### Update Tag
+Modify an existing tag.
+
+```
+PATCH /api/projects/{project_id}/topics/{topic_id}/tags/{tag_id}/
+```
+
+**Request Body**:
+```json
+{
+  "name": "high-priority",
+  "color": "#F59E0B"
+}
+```
+
+### Delete Tag
+Remove a tag from a topic.
+
+```
+DELETE /api/projects/{project_id}/topics/{topic_id}/tags/{tag_id}/
+```
+
+**Response** (204 No Content): Empty response
+
+## Usage Examples
+
+### Complete Topic Workflow
+
+```bash
+# Create a topic
+curl -b cookies.txt -X POST http://localhost:8000/api/projects/1/topics/ \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "User Authentication Research",
+    "description": "Research authentication methods and implementation approaches",
+    "color": "#6366F1"
+  }'
+
+# Add a note to the topic
+curl -b cookies.txt -X POST http://localhost:8000/api/projects/1/topics/1/notes/ \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "OAuth 2.0 Implementation",
+    "content": "## OAuth 2.0 Flow\n\n1. Authorization Request\n2. Authorization Grant\n3. Access Token Request\n4. Protected Resource Access"
+  }'
+
+# Add reference links
+curl -b cookies.txt -X POST http://localhost:8000/api/projects/1/topics/1/links/ \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "OAuth 2.0 RFC",
+    "url": "https://tools.ietf.org/html/rfc6749",
+    "description": "Official OAuth 2.0 specification",
+    "link_type": "reference"
+  }'
+
+# Upload a diagram
+curl -b cookies.txt -X POST http://localhost:8000/api/projects/1/topics/1/media/ \
+  -F "title=Authentication Flow Diagram" \
+  -F "description=Visual representation of the OAuth flow" \
+  -F "file=@auth_flow.png"
+
+# Add a comment for discussion
+curl -b cookies.txt -X POST http://localhost:8000/api/projects/1/topics/1/comments/ \
+  -H "Content-Type: application/json" \
+  -d '{
+    "content": "Should we implement JWT tokens for session management?"
+  }'
+
+# Tag the topic for organization
+curl -b cookies.txt -X POST http://localhost:8000/api/projects/1/topics/1/tags/ \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "security",
+    "color": "#EF4444"
+  }'
+```
+
+### JavaScript/React Examples
+
+```javascript
+// Topic management hook
+const useTopic = (projectId, topicId) => {
+  const [topic, setTopic] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  const fetchTopic = useCallback(async () => {
+    try {
+      const response = await fetch(
+        `/api/projects/${projectId}/topics/${topicId}/`,
+        { credentials: 'include' }
+      );
+      const data = await response.json();
+      setTopic(data);
+    } catch (error) {
+      console.error('Failed to fetch topic:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [projectId, topicId]);
+
+  const addNote = useCallback(async (noteData) => {
+    const response = await fetch(
+      `/api/projects/${projectId}/topics/${topicId}/notes/`,
+      {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(noteData)
+      }
+    );
+    
+    if (response.ok) {
+      fetchTopic(); // Refresh topic data
+    }
+    
+    return response;
+  }, [projectId, topicId, fetchTopic]);
+
+  const addComment = useCallback(async (content, parentId = null) => {
+    const response = await fetch(
+      `/api/projects/${projectId}/topics/${topicId}/comments/`,
+      {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content, parent: parentId })
+      }
+    );
+    
+    if (response.ok) {
+      fetchTopic();
+    }
+    
+    return response;
+  }, [projectId, topicId, fetchTopic]);
+
+  return { 
+    topic, 
+    loading, 
+    fetchTopic, 
+    addNote, 
+    addComment 
+  };
+};
+
+// Media upload component
+const MediaUpload = ({ projectId, topicId, onUpload }) => {
+  const handleFileUpload = async (file, title, description) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('title', title);
+    formData.append('description', description);
+
+    try {
+      const response = await fetch(
+        `/api/projects/${projectId}/topics/${topicId}/media/`,
+        {
+          method: 'POST',
+          credentials: 'include',
+          body: formData
+        }
+      );
+
+      if (response.ok) {
+        const mediaFile = await response.json();
+        onUpload(mediaFile);
+      }
+    } catch (error) {
+      console.error('Upload failed:', error);
+    }
+  };
+
+  return (
+    // Upload component JSX
+  );
+};
+```
+
+## Topic System Features
+
+### Content Organization
+- **Topics**: Main containers for organizing project knowledge
+- **Notes**: Rich text content with collaborative editing
+- **Links**: Categorized external resources and references
+- **Media**: File uploads with automatic type detection
+- **Comments**: Threaded discussions with nested replies
+- **Tags**: Visual organization with custom colors
+
+### Collaboration Features
+- **Activity Logging**: All topic operations logged automatically
+- **Edit Tracking**: Note modifications track last editor
+- **Permission Control**: Role-based access (owner/editor/viewer)
+- **Real-time Updates**: Session-based updates for team collaboration
+
+### Content Types Supported
+- **Text**: Markdown-formatted notes and comments
+- **Images**: PNG, JPG, GIF, SVG formats
+- **Videos**: MP4, WebM, MOV formats
+- **Audio**: MP3, WAV, OGG formats
+- **Documents**: PDF, DOC, TXT, Markdown files
+- **Links**: Web resources with categorization
+
+This topic system transforms projects into comprehensive knowledge bases where teams can collaborate effectively on research, documentation, and resource sharing.
