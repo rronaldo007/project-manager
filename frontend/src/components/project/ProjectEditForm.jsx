@@ -1,150 +1,162 @@
-import React, { useState } from 'react';
-import ProgressBar from '../ui/ProgressBar';
+import React, { useState, useEffect } from 'react';
 
 const ProjectEditForm = ({ project, onSave, onCancel }) => {
   const [formData, setFormData] = useState({
-    title: project?.title || '',
-    description: project?.description || '',
-    status: project?.status || 'planning',
-    priority: project?.priority || 'medium',
-    start_date: project?.start_date || '',
-    end_date: project?.end_date || '',
-    progress_percentage: project?.progress_percentage || 0
+    title: '',
+    description: '',
+    status: 'planning',
+    priority: 'medium',
+    due_date: '',
+    progress: 0
   });
-  const [saving, setSaving] = useState(false);
 
-  const handleSubmit = async () => {
-    setSaving(true);
-    await onSave(formData);
-    setSaving(false);
+  useEffect(() => {
+    if (project) {
+      setFormData({
+        title: project.title || '',
+        description: project.description || '',
+        status: project.status || 'planning',
+        priority: project.priority || 'medium',
+        due_date: project.due_date ? project.due_date.split('T')[0] : '',
+        progress: project.progress || 0
+      });
+    }
+  }, [project]);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: name === 'progress' ? parseInt(value) : value
+    }));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const submitData = {
+      ...formData,
+      due_date: formData.due_date ? new Date(formData.due_date).toISOString() : null
+    };
+    onSave(submitData);
   };
 
   return (
-    <div className="bg-gray-800/30 backdrop-blur-sm rounded-xl p-8 border border-gray-700/50">
-      <h3 className="text-xl font-bold text-white mb-6 flex items-center">
-        <svg className="w-6 h-6 mr-3 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-        </svg>
-        Edit Project
-      </h3>
-
-      <div className="space-y-6">
+    <div className="bg-gray-800/30 backdrop-blur-sm border border-gray-700/50 rounded-2xl p-8">
+      <h2 className="text-2xl font-bold text-white mb-6">Edit Project</h2>
+      
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Title */}
         <div>
-          <label className="block text-sm font-semibold text-gray-300 mb-2">Project Title</label>
+          <label className="block text-sm font-medium text-gray-300 mb-2">Project Title</label>
           <input
             type="text"
+            name="title"
             value={formData.title}
-            onChange={(e) => setFormData({...formData, title: e.target.value})}
-            className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600/50 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+            onChange={handleChange}
+            className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+            required
           />
         </div>
 
+        {/* Description */}
         <div>
-          <label className="block text-sm font-semibold text-gray-300 mb-2">Description</label>
+          <label className="block text-sm font-medium text-gray-300 mb-2">Description</label>
           <textarea
+            name="description"
             value={formData.description}
-            onChange={(e) => setFormData({...formData, description: e.target.value})}
+            onChange={handleChange}
             rows={4}
-            className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600/50 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+            className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 resize-none"
           />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Status and Priority */}
+        <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-semibold text-gray-300 mb-2">Status</label>
+            <label className="block text-sm font-medium text-gray-300 mb-2">Status</label>
             <select
+              name="status"
               value={formData.status}
-              onChange={(e) => setFormData({...formData, status: e.target.value})}
-              className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600/50 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              onChange={handleChange}
+              className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600 rounded-xl text-white focus:outline-none focus:border-blue-500"
             >
               <option value="planning">Planning</option>
               <option value="in_progress">In Progress</option>
               <option value="on_hold">On Hold</option>
               <option value="completed">Completed</option>
-              <option value="cancelled">Cancelled</option>
             </select>
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-300 mb-2">Priority</label>
+            <label className="block text-sm font-medium text-gray-300 mb-2">Priority</label>
             <select
+              name="priority"
               value={formData.priority}
-              onChange={(e) => setFormData({...formData, priority: e.target.value})}
-              className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600/50 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              onChange={handleChange}
+              className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600 rounded-xl text-white focus:outline-none focus:border-blue-500"
             >
               <option value="low">Low</option>
               <option value="medium">Medium</option>
               <option value="high">High</option>
-              <option value="urgent">Urgent</option>
             </select>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Due Date and Progress */}
+        <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-semibold text-gray-300 mb-2">Start Date</label>
+            <label className="block text-sm font-medium text-gray-300 mb-2">Due Date</label>
             <input
               type="date"
-              value={formData.start_date}
-              onChange={(e) => setFormData({...formData, start_date: e.target.value})}
-              className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600/50 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              name="due_date"
+              value={formData.due_date}
+              onChange={handleChange}
+              className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600 rounded-xl text-white focus:outline-none focus:border-blue-500"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-300 mb-2">End Date</label>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Progress ({formData.progress}%)
+            </label>
             <input
-              type="date"
-              value={formData.end_date}
-              onChange={(e) => setFormData({...formData, end_date: e.target.value})}
-              className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600/50 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              type="range"
+              name="progress"
+              min="0"
+              max="100"
+              value={formData.progress}
+              onChange={handleChange}
+              className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
             />
+            <div className="w-full bg-gray-700/50 rounded-full h-2 mt-2 overflow-hidden">
+              <div 
+                className="h-full bg-gradient-to-r from-green-500 to-blue-500 rounded-full transition-all duration-500"
+                style={{ width: `${formData.progress}%` }}
+              />
+            </div>
           </div>
         </div>
 
-        <div>
-          <label className="block text-sm font-semibold text-gray-300 mb-3">
-            Progress: {formData.progress_percentage}%
-          </label>
-          <input
-            type="range"
-            min="0"
-            max="100"
-            value={formData.progress_percentage}
-            onChange={(e) => setFormData({...formData, progress_percentage: parseInt(e.target.value)})}
-            className="w-full h-3 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
-          />
-          <div className="mt-3">
-            <ProgressBar percentage={formData.progress_percentage} />
-          </div>
-        </div>
-
-        <div className="flex space-x-4 pt-4">
+        {/* Action Buttons */}
+        <div className="flex space-x-4 pt-4 border-t border-gray-700">
           <button
-            onClick={handleSubmit}
-            disabled={saving}
-            className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 disabled:opacity-50 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200 flex items-center justify-center"
+            type="submit"
+            className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white rounded-xl transition-all duration-200"
           >
-            {saving ? (
-              <>
-                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Saving...
-              </>
-            ) : (
-              'Save Changes'
-            )}
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+            <span>Save Changes</span>
           </button>
           <button
+            type="button"
             onClick={onCancel}
-            className="px-6 py-3 bg-gray-600/50 hover:bg-gray-600/70 text-white rounded-lg font-semibold transition-all duration-200"
+            className="px-6 py-3 border border-gray-600 text-gray-300 rounded-xl hover:bg-gray-700/50 transition-colors"
           >
             Cancel
           </button>
         </div>
-      </div>
+      </form>
     </div>
   );
 };

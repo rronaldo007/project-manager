@@ -1,181 +1,230 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
-import ProjectStats from '../components/project/ProjectStats';
-import ProjectFilters from '../components/project/ProjectFilters';
-import ProjectsGrid from '../components/project/ProjectsGrid';
-import CreateProjectModal from '../components/project/CreateProjectModal';
+import ProjectStats from '../components/projects/ProjectStats';
+import ProjectsGrid from '../components/projects/ProjectsGrid';
+import CreateProjectModal from '../components/projects/CreateProjectModal';
+import EditProjectModal from '../components/projects/EditProjectModal';
 
 const ProjectsPage = ({ onProjectSelect }) => {
-  const { user } = useAuth();
   const [projects, setProjects] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [showCreateForm, setShowCreateForm] = useState(false);
-  const [filter, setFilter] = useState({ status: '', priority: '', search: '' });
   const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [statsLoading, setStatsLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedProject, setSelectedProject] = useState(null);
+  const { user } = useAuth();
 
-  // Fetch projects from API
+  const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+
   const fetchProjects = async () => {
     try {
       setLoading(true);
-      
-      const params = new URLSearchParams();
-      if (filter.status) params.append('status', filter.status);
-      if (filter.priority) params.append('priority', filter.priority);
-      if (filter.search) params.append('search', filter.search);
-      
-      const url = `http://localhost:8000/api/projects/${params.toString() ? '?' + params.toString() : ''}`;
-      
-      const response = await fetch(url, {
-        method: 'GET',
+      const response = await fetch(`${API_BASE}/api/projects/`, {
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
       });
-
+      
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        throw new Error('Authentication required - please login');
+      }
+      
       if (response.ok) {
         const data = await response.json();
-        setProjects(data);
-        setError('');
+        setProjects(Array.isArray(data) ? data : []);
       } else {
-        setError('Failed to fetch projects');
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
-    } catch (err) {
-      setError('Network error while fetching projects');
+    } catch (error) {
+      setError(error.message);
+      console.error('Error fetching projects:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  // Fetch project statistics
   const fetchStats = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/projects/stats/', {
-        method: 'GET',
+      setStatsLoading(true);
+      const response = await fetch(`${API_BASE}/api/projects/stats/`, {
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
       });
-
+      
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        setStats({
+          totalProjects: projects.length,
+          activeProjects: projects.filter(p => p.status === 'in_progress').length,
+          completedTasks: 0,
+          pendingTasks: 0,
+        });
+        return;
+      }
+      
       if (response.ok) {
         const data = await response.json();
         setStats(data);
+      } else {
+        setStats({
+          totalProjects: projects.length,
+          activeProjects: projects.filter(p => p.status === 'in_progress').length,
+          completedTasks: 0,
+          pendingTasks: 0,
+        });
       }
-    } catch (err) {
-      console.error('Failed to fetch stats:', err);
+    } catch (error) {
+      setStats({
+        totalProjects: projects.length,
+        activeProjects: projects.filter(p => p.status === 'in_progress').length,
+        completedTasks: 0,
+        pendingTasks: 0,
+      });
+    } finally {
+      setStatsLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchProjects();
-    fetchStats();
-  }, [filter]);
-
-  const handleProjectClick = (projectId) => {
-    if (onProjectSelect) {
-      onProjectSelect(projectId);
-    }
-  };
-
-  const createProject = async (formData) => {
+  const handleCreateProject = async (projectData) => {
     try {
-      const response = await fetch('http://localhost:8000/api/projects/', {
+      const response = await fetch(`${API_BASE}/api/projects/`, {
         method: 'POST',
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(projectData),
       });
 
-      const data = await response.json();
-
       if (response.ok) {
-        setProjects([data, ...projects]);
-        fetchStats();
-        return { success: true };
+        await fetchProjects();
+        await fetchStats();
       } else {
-        return { success: false, errors: data };
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to create project');
       }
-    } catch (err) {
-      return { success: false, errors: { general: 'Network error while creating project' } };
+    } catch (error) {
+      throw error;
     }
   };
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
-      {/* Animated background elements */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-pulse"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-blue-500 rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-pulse"></div>
-      </div>
+  const handleEditProject = async (projectId, projectData) => {
+    try {
+      const response = await fetch(`${API_BASE}/api/projects/${projectId}/`, {
+        method: 'PATCH',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(projectData),
+      });
 
-      <div className="relative z-10 p-8">
-        <div className="max-w-7xl mx-auto">
-          {/* Enhanced Header */}
-          <div className="mb-10">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-              <div>
-                <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 mb-2">
-                  Projects Dashboard
-                </h1>
-                <p className="text-gray-300 text-lg">
-                  Track, manage and collaborate on all your projects
-                </p>
-              </div>
-              <button
-                onClick={() => setShowCreateForm(true)}
-                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-3 rounded-xl flex items-center space-x-3 transition-all duration-200 transform hover:scale-105 shadow-lg"
-              >
-                <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                  </svg>
-                </div>
-                <span className="font-semibold">Create New Project</span>
-              </button>
-            </div>
-          </div>
+      if (response.ok) {
+        await fetchProjects();
+        await fetchStats();
+      } else {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to update project');
+      }
+    } catch (error) {
+      throw error;
+    }
+  };
 
-          {/* Enhanced Statistics */}
-          <div className="mb-8">
-            <ProjectStats stats={stats} />
-          </div>
+  const handleEditClick = (project) => {
+    setSelectedProject(project);
+    setShowEditModal(true);
+  };
 
-          {/* Enhanced Filters */}
-          <div className="mb-8">
-            <ProjectFilters filter={filter} onFilterChange={setFilter} />
-          </div>
+  useEffect(() => {
+    if (user) {
+      fetchProjects();
+      fetchStats();
+    }
+  }, [user]);
 
-          {/* Projects Grid with enhanced styling */}
-          <div className="bg-gray-800/30 backdrop-blur-sm rounded-2xl p-6 border border-gray-700/50">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-semibold text-white flex items-center">
-                <span className="w-2 h-2 bg-blue-500 rounded-full mr-3 animate-pulse"></span>
-                Active Projects
-              </h2>
-              <span className="text-sm text-gray-400">
-                {projects.length} {projects.length === 1 ? 'project' : 'projects'} found
-              </span>
-            </div>
-            
-            <ProjectsGrid 
-              projects={projects}
-              loading={loading}
-              error={error}
-              onProjectClick={handleProjectClick}
-            />
-          </div>
-
-          {/* Create Project Modal */}
-          <CreateProjectModal 
-            isOpen={showCreateForm}
-            onClose={() => setShowCreateForm(false)}
-            onCreateProject={createProject}
-          />
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-white text-lg">Loading...</p>
         </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+          </div>
+          <h2 className="text-2xl font-bold text-white mb-2">Error Loading Projects</h2>
+          <p className="text-gray-400 mb-6">{error}</p>
+          <button 
+            onClick={() => {
+              setError('');
+              fetchProjects();
+              fetchStats();
+            }}
+            className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-6">
+      <div className="max-w-7xl mx-auto">
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 mb-2">
+            My Projects
+          </h1>
+          <p className="text-gray-400 text-lg">
+            Manage and track your project portfolio
+          </p>
+        </div>
+
+        <ProjectStats stats={stats} loading={statsLoading} />
+        
+        <ProjectsGrid 
+          projects={projects} 
+          loading={loading}
+          onProjectSelect={onProjectSelect}
+          onCreateProject={() => setShowCreateModal(true)}
+          onEditProject={handleEditClick}
+        />
+
+        {/* Create Project Modal */}
+        <CreateProjectModal
+          isOpen={showCreateModal}
+          onClose={() => setShowCreateModal(false)}
+          onSubmit={handleCreateProject}
+        />
+
+        {/* Edit Project Modal */}
+        <EditProjectModal
+          isOpen={showEditModal}
+          onClose={() => {
+            setShowEditModal(false);
+            setSelectedProject(null);
+          }}
+          onSubmit={handleEditProject}
+          project={selectedProject}
+        />
       </div>
     </div>
   );

@@ -1,34 +1,23 @@
 import React from 'react';
+import { useAuth } from '../../hooks/useAuth';
 
-const UserAvatar = ({ user, showRole = false, role = null }) => {
-  const getInitials = () => {
-    if (!user || !user.first_name || !user.last_name) return 'U';
-    return `${user.first_name.charAt(0)}${user.last_name.charAt(0)}`.toUpperCase();
-  };
+const UserAvatar = ({ className = '' }) => {
+  const { user, getUserInitials } = useAuth();
+
+  // Provide fallback if user is not loaded yet
+  if (!user) {
+    return (
+      <div className={`w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center ${className}`}>
+        <span className="text-white font-medium text-sm">U</span>
+      </div>
+    );
+  }
 
   return (
-    <div className="flex items-center space-x-3">
-      <div className="relative">
-        <div className="w-12 h-12 bg-gradient-to-br from-purple-500 via-blue-500 to-cyan-500 rounded-full flex items-center justify-center shadow-lg">
-          <span className="text-white text-sm font-bold">{getInitials()}</span>
-        </div>
-        {showRole && role === 'owner' && (
-          <div className="absolute -top-1 -right-1 w-5 h-5 bg-yellow-500 rounded-full flex items-center justify-center">
-            <span className="text-xs">👑</span>
-          </div>
-        )}
-      </div>
-      <div>
-        <p className="text-white text-sm font-semibold">
-          {user.first_name} {user.last_name}
-        </p>
-        <p className="text-gray-400 text-xs">{user.email}</p>
-        {showRole && (
-          <p className="text-blue-400 text-xs font-medium">
-            {role === 'owner' ? '👑 Project Owner' : 'Team Member'}
-          </p>
-        )}
-      </div>
+    <div className={`w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center ${className}`}>
+      <span className="text-white font-medium text-sm">
+        {getUserInitials()}
+      </span>
     </div>
   );
 };

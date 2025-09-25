@@ -1,0 +1,13 @@
+admin@example.com : admin123
+rukundoronaldo4@gmail.com : newpass123
+
+docker-compose exec backend python manage.py shell -c "
+from django.contrib.auth.models import User
+
+users_data = [
+    {'email': 'alice@example.com', 'first_name': 'Alice', 'last_name': 'Johnson', 'password': 'testpass123'},
+    {'email': 'bob@example.com', 'first_name': 'Bob', 'last_name': 'Wilson', 'password': 'testpass123'},
+    {'email': 'carol@example.com', 'first_name': 'Carol', 'last_name': 'Davis', 'password': 'testpass123'},
+    {'email': 'david@example.com', 'first_name': 'David', 'last_name': 'Brown', 'password': 'testpass123'},
+    {'email': 'emma@example.com', 'first_name': 'Emma', 'last_name': 'Thompson', 'password': 'testpass123'},
+]
