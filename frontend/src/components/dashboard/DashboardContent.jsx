@@ -1,5 +1,6 @@
 import React from 'react';
 import UserProfile from './UserProfile';
+import Welcomepage from './Welcomepage';
 import ProjectsPage from '../../pages/ProjectsPage';
 import ProjectPage from '../../pages/ProjectPage';
 
@@ -10,6 +11,8 @@ const DashboardContent = ({
   onBackToProjects 
 }) => {
   switch(activeTab) {
+    case 'dashboard':
+      return <Welcomepage />;
     case 'profile':
       return <UserProfile />;
     
