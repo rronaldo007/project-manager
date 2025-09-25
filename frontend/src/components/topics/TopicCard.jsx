@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-const TopicCard = ({ topic, onClick, canEdit, onUpdate, onDelete }) => {
+const TopicCard = ({ topic, onClick, canEdit, onDelete }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const formatDate = (dateString) => {
@@ -22,7 +22,7 @@ const TopicCard = ({ topic, onClick, canEdit, onUpdate, onDelete }) => {
 
   return (
     <div 
-      className="relative bg-gray-800/50 backdrop-blur-sm rounded-xl border border-gray-700/50 hover:border-gray-600 transition-all duration-200 cursor-pointer group hover:shadow-lg"
+      className="relative bg-gray-800/50 backdrop-blur-sm rounded-xl border border-gray-700/50 hover:border-gray-600 transition-all duration-200 cursor-pointer group hover:shadow-lg hover:transform hover:scale-105"
       onClick={onClick}
     >
       {/* Color stripe */}

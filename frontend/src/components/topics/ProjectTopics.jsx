@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import TopicCard from './TopicCard';
+import TopicListItem from './TopicListItem';
 import CreateTopicModal from './CreateTopicModal';
-import TopicDetailModal from './TopicDetailModal';
+import ViewToggle from './ViewToggle';
+import UploadButton from './UploadButton';
 
-const ProjectTopics = ({ projectId, canEdit, onTopicsChange }) => {
+const ProjectTopics = ({ projectId, canEdit, onTopicsChange, onNavigateToTopic }) => {
   const [topics, setTopics] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [selectedTopic, setSelectedTopic] = useState(null);
+  const [viewMode, setViewMode] = useState('grid');
+  const [uploading, setUploading] = useState(false);
   const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
   useEffect(() => {
@@ -63,29 +66,6 @@ const ProjectTopics = ({ projectId, canEdit, onTopicsChange }) => {
     }
   };
 
-  const handleUpdateTopic = async (topicId, updates) => {
-    try {
-      const response = await fetch(`${API_BASE}/api/projects/${projectId}/topics/${topicId}/`, {
-        method: 'PATCH',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(updates),
-      });
-
-      if (response.ok) {
-        await fetchTopics();
-        onTopicsChange?.();
-      } else {
-        throw new Error('Failed to update topic');
-      }
-    } catch (error) {
-      console.error('Error updating topic:', error);
-      throw error;
-    }
-  };
-
   const handleDeleteTopic = async (topicId) => {
     if (!confirm('Are you sure you want to delete this topic? All associated content will be permanently removed.')) {
       return;
@@ -100,13 +80,64 @@ const ProjectTopics = ({ projectId, canEdit, onTopicsChange }) => {
       if (response.ok) {
         await fetchTopics();
         onTopicsChange?.();
-        setSelectedTopic(null);
       } else {
         throw new Error('Failed to delete topic');
       }
     } catch (error) {
       console.error('Error deleting topic:', error);
       throw error;
+    }
+  };
+
+  const handleFileUpload = async (files) => {
+    if (!files || files.length === 0) return;
+
+    setUploading(true);
+    try {
+      // Create a topic for uploaded files if needed
+      let uploadTopic = topics.find(t => t.title === 'Uploaded Files');
+      
+      if (!uploadTopic) {
+        const topicResponse = await fetch(`${API_BASE}/api/projects/${projectId}/topics/`, {
+          method: 'POST',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            title: 'Uploaded Files',
+            description: 'Files uploaded directly to the project',
+            color: '#6B7280'
+          }),
+        });
+
+        if (topicResponse.ok) {
+          uploadTopic = await topicResponse.json();
+        } else {
+          throw new Error('Failed to create upload topic');
+        }
+      }
+
+      // Upload each file to the topic
+      for (const file of files) {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('title', file.name);
+        formData.append('description', `Uploaded file: ${file.name}`);
+
+        await fetch(`${API_BASE}/api/projects/${projectId}/topics/${uploadTopic.id}/media/`, {
+          method: 'POST',
+          credentials: 'include',
+          body: formData,
+        });
+      }
+
+      await fetchTopics();
+      onTopicsChange?.();
+    } catch (error) {
+      console.error('Error uploading files:', error);
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -149,20 +180,23 @@ const ProjectTopics = ({ projectId, canEdit, onTopicsChange }) => {
           <h2 className="text-2xl font-bold text-white mb-2">Topics</h2>
           <p className="text-gray-400">Organize project knowledge into focused areas</p>
         </div>
-        {canEdit && (
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-            <span>New Topic</span>
-          </button>
-        )}
+        <div className="flex items-center space-x-3">
+          <ViewToggle viewMode={viewMode} onViewModeChange={setViewMode} />
+          {canEdit && (
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              <span>New Topic</span>
+            </button>
+          )}
+        </div>
       </div>
 
-      {/* Topics Grid */}
+      {/* Topics Display */}
       {topics.length === 0 ? (
         <div className="text-center py-12">
           <div className="w-16 h-16 bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -182,18 +216,33 @@ const ProjectTopics = ({ projectId, canEdit, onTopicsChange }) => {
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {topics.map((topic) => (
-            <TopicCard
-              key={topic.id}
-              topic={topic}
-              onClick={() => setSelectedTopic(topic)}
-              canEdit={canEdit}
-              onUpdate={handleUpdateTopic}
-              onDelete={handleDeleteTopic}
-            />
-          ))}
-        </div>
+        <>
+          {viewMode === 'grid' ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {topics.map((topic) => (
+                <TopicCard
+                  key={topic.id}
+                  topic={topic}
+                  onClick={() => onNavigateToTopic(topic)}
+                  canEdit={canEdit}
+                  onDelete={handleDeleteTopic}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {topics.map((topic) => (
+                <TopicListItem
+                  key={topic.id}
+                  topic={topic}
+                  onClick={() => onNavigateToTopic(topic)}
+                  canEdit={canEdit}
+                  onDelete={handleDeleteTopic}
+                />
+              ))}
+            </div>
+          )}
+        </>
       )}
 
       {/* Create Topic Modal */}
@@ -201,18 +250,6 @@ const ProjectTopics = ({ projectId, canEdit, onTopicsChange }) => {
         <CreateTopicModal
           onClose={() => setShowCreateModal(false)}
           onSubmit={handleCreateTopic}
-        />
-      )}
-
-      {/* Topic Detail Modal */}
-      {selectedTopic && (
-        <TopicDetailModal
-          topic={selectedTopic}
-          projectId={projectId}
-          canEdit={canEdit}
-          onClose={() => setSelectedTopic(null)}
-          onUpdate={handleUpdateTopic}
-          onDelete={handleDeleteTopic}
         />
       )}
     </div>

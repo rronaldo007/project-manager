@@ -9,6 +9,7 @@ import ProjectActivity from '../components/project/ProjectActivity';
 import TeamMembers from '../components/project/TeamMembers';
 import ProjectUsersManagement from '../components/project/ProjectUsersManagement';
 import ProjectTopics from '../components/topics/ProjectTopics';
+import TopicPage from '../components/topics/TopicPage';
 
 const ProjectPage = ({ projectId, onBack }) => {
   const [project, setProject] = useState(null);
@@ -17,6 +18,11 @@ const ProjectPage = ({ projectId, onBack }) => {
   const [activeTab, setActiveTab] = useState('overview');
   const [isEditing, setIsEditing] = useState(false);
   const [showUsersModal, setShowUsersModal] = useState(false);
+  
+  // Topic page state
+  const [viewMode, setViewMode] = useState('project'); // 'project' or 'topic'
+  const [selectedTopic, setSelectedTopic] = useState(null);
+  
   const { user } = useAuth();
   const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
@@ -98,6 +104,18 @@ const ProjectPage = ({ projectId, onBack }) => {
     }
   };
 
+  // Topic navigation handlers
+  const openTopic = (topic) => {
+    setSelectedTopic(topic);
+    setViewMode('topic');
+  };
+
+  const closeTopic = () => {
+    setSelectedTopic(null);
+    setViewMode('project');
+    fetchProject(); // Refresh project data
+  };
+
   const isOwner = project?.owner?.id === user?.id;
   const canEdit = project?.user_role === 'owner' || project?.user_role === 'editor';
 
@@ -161,6 +179,20 @@ const ProjectPage = ({ projectId, onBack }) => {
       )
     }
   ];
+
+  // Show TopicPage if a topic is selected
+  if (viewMode === 'topic' && selectedTopic) {
+    return (
+      <TopicPage
+        topicId={selectedTopic.id}
+        projectId={projectId}
+        canEdit={canEdit}
+        onBack={closeTopic}
+        onUpdate={fetchProject}
+        onDelete={closeTopic}
+      />
+    );
+  }
 
   if (loading) {
     return (
@@ -250,6 +282,7 @@ const ProjectPage = ({ projectId, onBack }) => {
                   projectId={projectId}
                   canEdit={canEdit}
                   onTopicsChange={fetchProject}
+                  onNavigateToTopic={openTopic}
                 />
               )}
               {activeTab === 'team' && (
