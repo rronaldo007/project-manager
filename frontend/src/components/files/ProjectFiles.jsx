@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTopicViewMemory } from '../../hooks/useTabMemory';
 import FileCard from './FileCard';
 import FileListItem from './FileListItem';
 import DragDropOverlay from './DragDropOverlay';
@@ -13,7 +14,7 @@ const ProjectFiles = ({ projectId, canEdit }) => {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
   const [dragActive, setDragActive] = useState(false);
-  const [viewMode, setViewMode] = useState('grid');
+  const [viewMode, setViewMode] = useTopicViewMemory('grid'); // Use memory hook instead of useState
   const [selectedFile, setSelectedFile] = useState(null);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';

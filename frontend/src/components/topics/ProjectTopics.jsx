@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTopicViewMemory } from '../../hooks/useTabMemory';
 import TopicCard from './TopicCard';
 import TopicListItem from './TopicListItem';
 import CreateTopicModal from './CreateTopicModal';
@@ -10,7 +11,7 @@ const ProjectTopics = ({ projectId, canEdit, onTopicsChange, onNavigateToTopic }
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [viewMode, setViewMode] = useState('grid');
+  const [viewMode, setViewMode] = useTopicViewMemory('grid'); // Use memory hook
   const [uploading, setUploading] = useState(false);
   const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 

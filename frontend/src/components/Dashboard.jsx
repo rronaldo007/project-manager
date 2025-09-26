@@ -1,15 +1,24 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useAuth } from '../hooks/useAuth';
+import { useTabMemory } from '../hooks/useTabMemory';
 import DashboardLayout from '../components/dashboard/DashboardLayout';
 import DashboardContent from '../components/dashboard/DashboardContent';
 
 const Dashboard = () => {
-  const [activeTab, setActiveTab] = useState('dashboard');
-  const [selectedProjectId, setSelectedProjectId] = useState(null);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const {
+    activeTab,
+    setActiveTab,
+    selectedProjectId,
+    setSelectedProjectId,
+    isSidebarOpen,
+    setIsSidebarOpen,
+    clearMemory
+  } = useTabMemory('dashboard');
+
   const { user, logout, getUserInitials } = useAuth();
 
   const handleLogout = async () => {
+    clearMemory(); // Clear all memory on logout
     await logout();
     window.location.href = '/';
   };
@@ -26,16 +35,22 @@ const Dashboard = () => {
 
   const handleTabChange = (tab) => {
     setActiveTab(tab);
-    setSelectedProjectId(null);
+    if (tab !== 'project-detail') {
+      setSelectedProjectId(null);
+    }
+  };
+
+  const handleSidebarToggle = () => {
+    setIsSidebarOpen(!isSidebarOpen);
   };
 
   return (
     <DashboardLayout
       isSidebarOpen={isSidebarOpen}
-      onSidebarToggle={() => setIsSidebarOpen(!isSidebarOpen)}
+      onSidebarToggle={handleSidebarToggle}
       activeTab={activeTab}
       onTabChange={handleTabChange}
-        user={user}
+      user={user}
       getUserInitials={getUserInitials}
       onLogout={handleLogout}
     >
