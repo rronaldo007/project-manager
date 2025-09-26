@@ -9,9 +9,11 @@
 6. [Project Activity Endpoints](#project-activity-endpoints)
 7. [Project Files Endpoints](#project-files-endpoints)
 8. [Project Links Endpoints](#project-links-endpoints)
-9. [User Management Endpoints](#user-management-endpoints)
-10. [Error Handling](#error-handling)
-11. [Usage Examples](#usage-examples)
+9. [Topic System Endpoints](#topic-system-endpoints)
+10. [Ideas System Endpoints](#ideas-system-endpoints)
+11. [User Management Endpoints](#user-management-endpoints)
+12. [Error Handling](#error-handling)
+13. [Usage Examples](#usage-examples)
 
 ## Overview
 
@@ -26,6 +28,8 @@
 - Team collaboration with role-based permissions
 - Project activity tracking
 - File and link management per project
+- Topic-based knowledge organization
+- Ideas system for innovation management
 - Dashboard statistics and analytics
 
 ### Permission Levels
@@ -300,20 +304,6 @@ GET /api/projects/stats/
 }
 ```
 
-### Recent Projects
-Get recently updated projects for dashboard.
-
-```
-GET /api/projects/recent/
-```
-
-**Authentication**: Required
-
-**Query Parameters**:
-- `limit`: Number of projects to return (default: 5)
-
-**Response** (200 OK): Array of projects (same format as list)
-
 ## Project Membership Endpoints
 
 ### List Project Members
@@ -339,17 +329,6 @@ GET /api/projects/{project_id}/members/
     },
     "role": "editor",
     "created_at": "2025-09-25T15:00:00Z"
-  },
-  {
-    "id": 2,
-    "user": {
-      "id": 3,
-      "first_name": "Bob",
-      "last_name": "Wilson",
-      "email": "bob.wilson@example.com"
-    },
-    "role": "viewer",
-    "created_at": "2025-09-25T15:30:00Z"
   }
 ]
 ```
@@ -374,32 +353,6 @@ POST /api/projects/{project_id}/members/
 
 **Response** (201 Created): Newly created membership object
 
-**Error Responses**:
-```json
-{
-  "user_email": ["User with this email does not exist"]
-}
-```
-
-### Update Member Role
-Modify a team member's role.
-
-```
-PATCH /api/projects/{project_id}/members/{member_id}/
-```
-
-**Authentication**: Required
-**Permissions**: Only project owner
-
-**Request Body**:
-```json
-{
-  "role": "viewer"
-}
-```
-
-**Response** (200 OK): Updated membership object
-
 ### Remove Project Member
 Remove a team member from a project.
 
@@ -411,36 +364,6 @@ DELETE /api/projects/{project_id}/members/{member_id}/
 **Permissions**: Only project owner
 
 **Response** (204 No Content): Empty response
-
-### Search Users
-Search for users to add to projects.
-
-```
-GET /api/projects/users/search/
-```
-
-**Authentication**: Required
-
-**Query Parameters**:
-- `q`: Search query (minimum 2 characters)
-
-**Response** (200 OK):
-```json
-[
-  {
-    "id": 4,
-    "first_name": "Alice",
-    "last_name": "Johnson",
-    "email": "alice.johnson@example.com"
-  },
-  {
-    "id": 5,
-    "first_name": "Charlie",
-    "last_name": "Brown",
-    "email": "charlie.brown@example.com"
-  }
-]
-```
 
 ## Project Activity Endpoints
 
@@ -454,10 +377,6 @@ GET /api/projects/{project_id}/activities/
 **Authentication**: Required
 **Permissions**: User must have read access to the project
 
-**Query Parameters**:
-- `limit`: Number of activities to return (default: 50)
-- `offset`: Pagination offset
-
 **Response** (200 OK):
 ```json
 [
@@ -466,18 +385,6 @@ GET /api/projects/{project_id}/activities/
     "action": "Project Updated",
     "description": "Project status changed from 'planning' to 'in_progress'",
     "created_at": "2025-09-25T16:30:45.123456Z",
-    "user": {
-      "id": 1,
-      "first_name": "John",
-      "last_name": "Doe",
-      "email": "john.doe@example.com"
-    }
-  },
-  {
-    "id": 2,
-    "action": "Member Added",
-    "description": "Jane Smith was added as editor",
-    "created_at": "2025-09-25T15:00:00Z",
     "user": {
       "id": 1,
       "first_name": "John",
@@ -556,36 +463,6 @@ description: UI/UX design mockups for the project
 
 **Response** (201 Created): Created file object
 
-### Update File Details
-Modify file metadata.
-
-```
-PATCH /api/projects/{project_id}/files/{file_id}/
-```
-
-**Authentication**: Required
-**Permissions**: User must have write access to the project
-
-**Request Body**:
-```json
-{
-  "title": "Updated File Title",
-  "description": "Updated description"
-}
-```
-
-### Delete Project File
-Remove a file from a project.
-
-```
-DELETE /api/projects/{project_id}/files/{file_id}/
-```
-
-**Authentication**: Required
-**Permissions**: User must have write access to the project
-
-**Response** (204 No Content): Empty response
-
 ## Project Links Endpoints
 
 ### List Project Links
@@ -607,13 +484,6 @@ GET /api/projects/{project_id}/links/
     "url": "https://github.com/company/project-repo",
     "description": "Main project repository",
     "created_at": "2025-09-25T14:45:00Z"
-  },
-  {
-    "id": 2,
-    "title": "Design System",
-    "url": "https://figma.com/design-system",
-    "description": "UI design system and components",
-    "created_at": "2025-09-25T15:15:00Z"
   }
 ]
 ```
@@ -639,11 +509,50 @@ POST /api/projects/{project_id}/links/
 
 **Response** (201 Created): Created link object
 
-### Update Project Link
-Modify an existing project link.
+## Topic System Endpoints
+
+### Overview
+Topics serve as knowledge containers within projects, allowing teams to organize research, documentation, media, discussions, and resources into focused areas.
+
+### List Project Topics
+Get all topics for a specific project.
 
 ```
-PATCH /api/projects/{project_id}/links/{link_id}/
+GET /api/projects/{project_id}/topics/
+```
+
+**Authentication**: Required
+**Permissions**: User must have read access to the project
+
+**Response** (200 OK):
+```json
+[
+  {
+    "id": 1,
+    "title": "Research & Documentation",
+    "description": "Gather research materials and create documentation",
+    "color": "#3B82F6",
+    "created_at": "2025-09-25T14:00:00Z",
+    "updated_at": "2025-09-25T16:30:00Z",
+    "created_by": {
+      "id": 1,
+      "first_name": "John",
+      "last_name": "Doe",
+      "email": "john.doe@example.com"
+    },
+    "notes_count": 3,
+    "links_count": 5,
+    "media_count": 2,
+    "comments_count": 8
+  }
+]
+```
+
+### Create Topic
+Create a new topic within a project.
+
+```
+POST /api/projects/{project_id}/topics/
 ```
 
 **Authentication**: Required
@@ -652,34 +561,744 @@ PATCH /api/projects/{project_id}/links/{link_id}/
 **Request Body**:
 ```json
 {
-  "title": "Updated Link Title",
-  "description": "Updated description"
+  "title": "Design System",
+  "description": "UI components, design tokens, and style guidelines",
+  "color": "#10B981"
 }
 ```
 
-### Delete Project Link
-Remove a link from a project.
+**Response** (201 Created): Created topic object
+
+### Topic Notes Endpoints
+
+#### List Topic Notes
+```
+GET /api/projects/{project_id}/topics/{topic_id}/notes/
+```
+
+#### Create Topic Note
+```
+POST /api/projects/{project_id}/topics/{topic_id}/notes/
+```
+
+**Request Body**:
+```json
+{
+  "title": "Meeting Notes - Sprint Planning",
+  "content": "## Sprint Planning Meeting\n\n### Key Decisions\n- Focus on authentication system"
+}
+```
+
+### Topic Links Endpoints
+
+#### List Topic Links
+```
+GET /api/projects/{project_id}/topics/{topic_id}/links/
+```
+
+#### Create Topic Link
+```
+POST /api/projects/{project_id}/topics/{topic_id}/links/
+```
+
+**Request Body**:
+```json
+{
+  "title": "Django REST Framework Docs",
+  "url": "https://www.django-rest-framework.org/",
+  "description": "Official DRF documentation",
+  "link_type": "reference"
+}
+```
+
+### Topic Media Endpoints
+
+#### List Topic Media
+```
+GET /api/projects/{project_id}/topics/{topic_id}/media/
+```
+
+#### Upload Topic Media
+```
+POST /api/projects/{project_id}/topics/{topic_id}/media/
+```
+
+**Content-Type**: `multipart/form-data`
+
+### Topic Comments Endpoints
+
+#### List Topic Comments
+```
+GET /api/projects/{project_id}/topics/{topic_id}/comments/
+```
+
+#### Create Topic Comment
+```
+POST /api/projects/{project_id}/topics/{topic_id}/comments/
+```
+
+**Request Body**:
+```json
+{
+  "content": "Great progress on this topic!",
+  "parent": null
+}
+```
+
+## Ideas System Endpoints
+
+### Overview
+The Ideas System provides a comprehensive platform for capturing, developing, and managing innovative concepts within the project management ecosystem.
+
+### List Ideas
+Get all ideas accessible to the authenticated user (owned or shared).
 
 ```
-DELETE /api/projects/{project_id}/links/{link_id}/
+GET /api/ideas/
 ```
 
 **Authentication**: Required
-**Permissions**: User must have write access to the project
+**Permissions**: User can see ideas they own or are members of
+
+**Query Parameters**:
+- `status`: Filter by idea status (`draft`, `concept`, `in_development`, `implemented`, `on_hold`, `cancelled`)
+- `priority`: Filter by priority (`low`, `medium`, `high`, `critical`)
+- `search`: Search in title, description, problem statement, and tags
+- `project`: Filter ideas associated with specific project ID
+
+**Response** (200 OK):
+```json
+[
+  {
+    "id": 1,
+    "title": "AI-Powered Customer Support",
+    "description": "Implement intelligent chatbot system for automated customer support",
+    "priority": "high",
+    "status": "concept",
+    "tags": "ai,automation,customer-service",
+    "tag_list": ["ai", "automation", "customer-service"],
+    "owner": {
+      "id": 1,
+      "first_name": "John",
+      "last_name": "Doe",
+      "email": "john.doe@example.com"
+    },
+    "notes_count": 5,
+    "resources_count": 8,
+    "projects_count": 1,
+    "members_count": 3,
+    "user_role": "owner",
+    "created_at": "2025-09-25T14:00:00Z",
+    "updated_at": "2025-09-25T16:30:00Z"
+  }
+]
+```
+
+### Create Idea
+Create a new idea owned by the authenticated user.
+
+```
+POST /api/ideas/
+```
+
+**Authentication**: Required
+
+**Request Body**:
+```json
+{
+  "title": "Blockchain-Based Supply Chain Tracking",
+  "description": "Transparent supply chain management using blockchain technology",
+  "problem_statement": "Current supply chains lack transparency and traceability",
+  "solution_overview": "Implement blockchain ledger for immutable supply chain records",
+  "target_audience": "Manufacturing companies and logistics providers",
+  "priority": "medium",
+  "status": "draft",
+  "tags": "blockchain,supply-chain,transparency",
+  "project_ids": [1, 2]
+}
+```
+
+**Response** (201 Created): Created idea object with full details
+
+### Get Idea Details
+Retrieve comprehensive information about a specific idea.
+
+```
+GET /api/ideas/{id}/
+```
+
+**Authentication**: Required
+**Permissions**: User must be owner or member of the idea
+
+**Response** (200 OK):
+```json
+{
+  "id": 1,
+  "title": "AI-Powered Customer Support",
+  "description": "Implement intelligent chatbot system for automated customer support",
+  "problem_statement": "Current customer support is overwhelmed with repetitive queries",
+  "solution_overview": "AI chatbot that handles 80% of common customer inquiries automatically",
+  "target_audience": "Small to medium businesses with high customer inquiry volume",
+  "market_potential": "Global customer service automation market worth $15B",
+  "revenue_model": "SaaS subscription with tiered pricing based on query volume",
+  "competition_analysis": "Competitors include Zendesk, Intercom, but lack advanced AI",
+  "technical_requirements": "Natural language processing, machine learning models, API integrations",
+  "estimated_effort": "6-8 months with 4-person team",
+  "priority": "high",
+  "status": "concept",
+  "tags": "ai,automation,customer-service",
+  "tag_list": ["ai", "automation", "customer-service"],
+  "owner": {
+    "id": 1,
+    "first_name": "John",
+    "last_name": "Doe",
+    "email": "john.doe@example.com"
+  },
+  "projects": [
+    {
+      "id": 1,
+      "title": "Customer Platform Upgrade",
+      "description": "Modernizing customer service infrastructure",
+      "status": "in_progress"
+    }
+  ],
+  "notes": [
+    {
+      "id": 1,
+      "title": "Technical Research",
+      "content": "Investigated GPT-4 and Claude for conversational AI capabilities",
+      "author": {
+        "id": 1,
+        "first_name": "John",
+        "last_name": "Doe",
+        "email": "john.doe@example.com"
+      },
+      "created_at": "2025-09-25T15:00:00Z",
+      "updated_at": "2025-09-25T15:30:00Z"
+    }
+  ],
+  "resources": [
+    {
+      "id": 1,
+      "title": "OpenAI API Documentation",
+      "url": "https://platform.openai.com/docs",
+      "description": "Official documentation for OpenAI's API integration",
+      "resource_type": "reference",
+      "added_by": {
+        "id": 1,
+        "first_name": "John",
+        "last_name": "Doe",
+        "email": "john.doe@example.com"
+      },
+      "created_at": "2025-09-25T14:30:00Z"
+    }
+  ],
+  "memberships": [
+    {
+      "id": 1,
+      "user": {
+        "id": 2,
+        "first_name": "Jane",
+        "last_name": "Smith",
+        "email": "jane.smith@example.com"
+      },
+      "role": "editor",
+      "added_by": {
+        "id": 1,
+        "first_name": "John",
+        "last_name": "Doe",
+        "email": "john.doe@example.com"
+      },
+      "created_at": "2025-09-25T15:00:00Z"
+    }
+  ],
+  "user_role": "owner",
+  "user_permissions": {
+    "can_view": true,
+    "can_edit": true,
+    "can_contribute": true,
+    "can_manage_members": true,
+    "can_delete": true
+  },
+  "created_at": "2025-09-25T14:00:00Z",
+  "updated_at": "2025-09-25T16:30:00Z"
+}
+```
+
+### Update Idea
+Modify idea information.
+
+```
+PATCH /api/ideas/{id}/
+```
+
+**Authentication**: Required
+**Permissions**: User must have editor permissions or be owner
+
+**Request Body**:
+```json
+{
+  "status": "in_development",
+  "priority": "critical",
+  "solution_overview": "Enhanced AI chatbot with multilingual support",
+  "project_ids": [1, 2, 3]
+}
+```
+
+**Response** (200 OK): Updated idea object
+
+### Delete Idea
+Permanently delete an idea.
+
+```
+DELETE /api/ideas/{id}/
+```
+
+**Authentication**: Required
+**Permissions**: Only idea owner
 
 **Response** (204 No Content): Empty response
 
-## User Management Endpoints
-
-### List All Users
-Get all users in the system (admin only).
+### Ideas Statistics
+Get dashboard statistics for user's ideas.
 
 ```
-GET /api/users/
+GET /api/ideas/stats/
 ```
 
 **Authentication**: Required
-**Permissions**: Admin only
+
+**Response** (200 OK):
+```json
+{
+  "total_ideas": 15,
+  "by_status": {
+    "draft": 3,
+    "concept": 5,
+    "in_development": 4,
+    "implemented": 2,
+    "on_hold": 1,
+    "cancelled": 0
+  },
+  "by_priority": {
+    "low": 2,
+    "medium": 8,
+    "high": 4,
+    "critical": 1
+  },
+  "recent_ideas": [
+    {
+      "id": 1,
+      "title": "AI-Powered Customer Support",
+      "created_at": "2025-09-25T14:00:00Z"
+    }
+  ]
+}
+```
+
+## Idea Membership Endpoints
+
+### List Idea Members
+Get all team members for a specific idea.
+
+```
+GET /api/ideas/{idea_id}/members/
+```
+
+**Authentication**: Required
+**Permissions**: User must have access to the idea
+
+**Response** (200 OK):
+```json
+[
+  {
+    "id": 1,
+    "user": {
+      "id": 2,
+      "first_name": "Jane",
+      "last_name": "Smith",
+      "email": "jane.smith@example.com"
+    },
+    "role": "editor",
+    "added_by": {
+      "id": 1,
+      "first_name": "John",
+      "last_name": "Doe",
+      "email": "john.doe@example.com"
+    },
+    "created_at": "2025-09-25T15:00:00Z"
+  },
+  {
+    "id": 2,
+    "user": {
+      "id": 3,
+      "first_name": "Bob",
+      "last_name": "Wilson",
+      "email": "bob.wilson@example.com"
+    },
+    "role": "contributor",
+    "added_by": {
+      "id": 1,
+      "first_name": "John",
+      "last_name": "Doe",
+      "email": "john.doe@example.com"
+    },
+    "created_at": "2025-09-25T16:00:00Z"
+  }
+]
+```
+
+### Add Idea Member
+Add a new team member to an idea.
+
+```
+POST /api/ideas/{idea_id}/members/
+```
+
+**Authentication**: Required
+**Permissions**: Editor role or idea owner
+
+**Request Body (using email)**:
+```json
+{
+  "user_email": "contributor@example.com",
+  "role": "contributor"
+}
+```
+
+**Request Body (using user ID)**:
+```json
+{
+  "user_id": 3,
+  "role": "viewer"
+}
+```
+
+**Role Options**:
+- `viewer`: Can view the idea and its content
+- `contributor`: Can view and add notes/resources  
+- `editor`: Can view, edit, and manage members
+
+**Response** (201 Created):
+```json
+{
+  "id": 3,
+  "user": {
+    "id": 4,
+    "first_name": "Alice",
+    "last_name": "Johnson",
+    "email": "contributor@example.com"
+  },
+  "role": "contributor",
+  "added_by": {
+    "id": 1,
+    "first_name": "John",
+    "last_name": "Doe",
+    "email": "john.doe@example.com"
+  },
+  "created_at": "2025-09-25T17:00:00Z"
+}
+```
+
+**Error Responses**:
+```json
+{
+  "user_email": ["User with email contributor@example.com not found"]
+}
+```
+
+```json
+{
+  "non_field_errors": ["User is already a member of this idea"]
+}
+```
+
+```json
+{
+  "non_field_errors": ["The idea owner cannot be added as a member"]
+}
+```
+
+### Update Member Role
+Modify a team member's role in an idea.
+
+```
+PATCH /api/ideas/{idea_id}/members/{member_id}/
+```
+
+**Authentication**: Required
+**Permissions**: Only idea owner can change member roles
+
+**Request Body**:
+```json
+{
+  "role": "editor"
+}
+```
+
+**Response** (200 OK):
+```json
+{
+  "id": 1,
+  "user": {
+    "id": 2,
+    "first_name": "Jane",
+    "last_name": "Smith",
+    "email": "jane.smith@example.com"
+  },
+  "role": "editor",
+  "added_by": {
+    "id": 1,
+    "first_name": "John",
+    "last_name": "Doe",
+    "email": "john.doe@example.com"
+  },
+  "created_at": "2025-09-25T15:00:00Z"
+}
+```
+
+### Remove Idea Member
+Remove a team member from an idea.
+
+```
+DELETE /api/ideas/{idea_id}/members/{user_id}/
+```
+
+**Authentication**: Required
+**Permissions**: Editor role or idea owner
+
+**Response** (200 OK):
+```json
+{
+  "message": "Member removed successfully"
+}
+```
+
+**Error Responses**:
+```json
+{
+  "error": "Member not found"
+}
+```
+
+```json
+{
+  "error": "You do not have permission to remove members"
+}
+```
+
+### Bulk Add Members
+Add multiple team members to an idea in a single request.
+
+```
+POST /api/ideas/{idea_id}/members/bulk/
+```
+
+**Authentication**: Required
+**Permissions**: Editor role or idea owner
+
+**Request Body**:
+```json
+{
+  "members": [
+    {
+      "user_email": "dev1@company.com",
+      "role": "contributor"
+    },
+    {
+      "user_email": "dev2@company.com", 
+      "role": "viewer"
+    },
+    {
+      "user_id": 5,
+      "role": "editor"
+    }
+  ]
+}
+```
+
+**Response** (201 Created):
+```json
+{
+  "added": [
+    {
+      "id": 4,
+      "user": {
+        "id": 6,
+        "first_name": "Developer",
+        "last_name": "One",
+        "email": "dev1@company.com"
+      },
+      "role": "contributor"
+    }
+  ],
+  "errors": [
+    {
+      "user_email": "dev2@company.com",
+      "error": "User with this email does not exist"
+    }
+  ],
+  "skipped": [
+    {
+      "user_id": 5,
+      "reason": "User is already a member"
+    }
+  ]
+}
+```
+
+### Get Member Details
+Get detailed information about a specific idea member.
+
+```
+GET /api/ideas/{idea_id}/members/{member_id}/
+```
+
+**Authentication**: Required
+**Permissions**: User must have access to the idea
+
+**Response** (200 OK):
+```json
+{
+  "id": 1,
+  "user": {
+    "id": 2,
+    "first_name": "Jane",
+    "last_name": "Smith",
+    "email": "jane.smith@example.com",
+    "date_joined": "2025-09-20T10:00:00Z"
+  },
+  "role": "editor",
+  "added_by": {
+    "id": 1,
+    "first_name": "John",
+    "last_name": "Doe",
+    "email": "john.doe@example.com"
+  },
+  "created_at": "2025-09-25T15:00:00Z",
+  "permissions": {
+    "can_view": true,
+    "can_edit": true,
+    "can_contribute": true,
+    "can_manage_members": true,
+    "can_delete": false
+  },
+  "activity_summary": {
+    "notes_created": 3,
+    "resources_added": 5,
+    "last_activity": "2025-09-27T14:30:00Z"
+  }
+}
+```
+
+## Idea Notes Endpoints
+
+### List Idea Notes
+Get all notes for a specific idea.
+
+```
+GET /api/ideas/{idea_id}/notes/
+```
+
+**Authentication**: Required
+**Permissions**: User must have access to the idea
+
+**Response** (200 OK):
+```json
+[
+  {
+    "id": 1,
+    "title": "Market Research Findings",
+    "content": "# Market Research\n\n## Key Findings\n- 73% of businesses struggle with customer support response times",
+    "author": {
+      "id": 1,
+      "first_name": "John",
+      "last_name": "Doe",
+      "email": "john.doe@example.com"
+    },
+    "created_at": "2025-09-25T15:00:00Z",
+    "updated_at": "2025-09-25T15:30:00Z"
+  }
+]
+```
+
+### Create Idea Note
+Add a new note to an idea.
+
+```
+POST /api/ideas/{idea_id}/notes/
+```
+
+**Authentication**: Required
+**Permissions**: Contributor role or higher
+
+**Request Body**:
+```json
+{
+  "title": "Technical Implementation Plan",
+  "content": "## Phase 1: Data Collection\n- Gather customer inquiry data\n- Analyze response patterns"
+}
+```
+
+**Response** (201 Created): Created note object
+
+## Idea Resources Endpoints
+
+### List Idea Resources
+Get all resources for a specific idea.
+
+```
+GET /api/ideas/{idea_id}/resources/
+```
+
+**Authentication**: Required
+**Permissions**: User must have access to the idea
+
+**Response** (200 OK):
+```json
+[
+  {
+    "id": 1,
+    "title": "Competitor Analysis - Zendesk",
+    "url": "https://www.zendesk.com/features/",
+    "description": "Analysis of Zendesk's AI features and pricing model",
+    "resource_type": "competitor",
+    "added_by": {
+      "id": 2,
+      "first_name": "Jane",
+      "last_name": "Smith",
+      "email": "jane.smith@example.com"
+    },
+    "created_at": "2025-09-25T14:45:00Z"
+  }
+]
+```
+
+### Create Idea Resource
+Add a new resource to an idea.
+
+```
+POST /api/ideas/{idea_id}/resources/
+```
+
+**Authentication**: Required
+**Permissions**: Contributor role or higher
+
+**Request Body**:
+```json
+{
+  "title": "Google's DialogFlow Documentation",
+  "url": "https://cloud.google.com/dialogflow/docs",
+  "description": "Comprehensive guide for building conversational AI applications",
+  "resource_type": "tool"
+}
+```
+
+**Resource Types**: `research`, `reference`, `inspiration`, `competitor`, `tool`, `other`
+
+**Response** (201 Created): Created resource object
+
+## User Management Endpoints
 
 ### Get User Profile
 Get detailed user information.
@@ -772,9 +1391,8 @@ PATCH /api/users/{user_id}/
 
 ## Usage Examples
 
-### cURL Examples
+### Complete Authentication Flow
 
-#### Complete Authentication Flow
 ```bash
 # Register
 curl -X POST http://localhost:8000/api/auth/register/ \
@@ -788,9 +1406,6 @@ curl -X POST http://localhost:8000/api/auth/register/ \
   }' \
   --cookie-jar cookies.txt
 
-# Get current user
-curl http://localhost:8000/api/auth/me/ --cookie cookies.txt
-
 # Create project
 curl -X POST http://localhost:8000/api/projects/ \
   -H "Content-Type: application/json" \
@@ -799,137 +1414,111 @@ curl -X POST http://localhost:8000/api/projects/ \
     "title": "API Integration Project",
     "description": "Integrating third-party APIs",
     "status": "planning",
-    "priority": "high",
-    "due_date": "2025-12-31T23:59:59Z"
+    "priority": "high"
   }'
 ```
 
-#### Team Management
+### Complete Idea Lifecycle
+
 ```bash
-# Add team member
-curl -X POST http://localhost:8000/api/projects/1/members/ \
+# Create an idea
+curl -b cookies.txt -X POST http://localhost:8000/api/ideas/ \
   -H "Content-Type: application/json" \
-  --cookie cookies.txt \
   -d '{
-    "user_email": "teammate@example.com",
+    "title": "Smart Inventory Management",
+    "description": "IoT-based inventory tracking with predictive analytics",
+    "problem_statement": "Manual inventory tracking leads to stockouts and waste",
+    "priority": "high",
+    "status": "concept",
+    "tags": "iot,ml,inventory,analytics"
+  }'
+
+# Add team members
+curl -b cookies.txt -X POST http://localhost:8000/api/ideas/1/members/ \
+  -H "Content-Type: application/json" \
+  -d '{
+    "user_email": "developer@company.com",
     "role": "editor"
   }'
 
-# List project activities
-curl http://localhost:8000/api/projects/1/activities/ --cookie cookies.txt
-
-# Add project link
-curl -X POST http://localhost:8000/api/projects/1/links/ \
+# Add research notes
+curl -b cookies.txt -X POST http://localhost:8000/api/ideas/1/notes/ \
   -H "Content-Type: application/json" \
-  --cookie cookies.txt \
   -d '{
-    "title": "Project Wiki",
-    "url": "https://wiki.company.com/project1",
-    "description": "Project documentation and wiki"
+    "title": "IoT Sensor Research",
+    "content": "## Sensor Options\n\n1. **RFID Tags**: Low cost, passive scanning"
   }'
 ```
 
-### JavaScript/Fetch Examples
-
-#### Project Management
-```javascript
-// Get projects with filtering
-const response = await fetch('/api/projects/?status=in_progress&priority=high', {
-  credentials: 'include'
-});
-const projects = await response.json();
-
-// Update project progress
-const updateResponse = await fetch('/api/projects/1/', {
-  method: 'PATCH',
-  credentials: 'include',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    progress: 75,
-    status: 'in_progress'
-  })
-});
-
-// Upload file
-const formData = new FormData();
-formData.append('title', 'Project Specification');
-formData.append('file', fileInput.files[0]);
-formData.append('description', 'Technical specification document');
-
-const uploadResponse = await fetch('/api/projects/1/files/', {
-  method: 'POST',
-  credentials: 'include',
-  body: formData
-});
-```
-
-#### Team Collaboration
-```javascript
-// Search users
-const searchResponse = await fetch('/api/projects/users/search/?q=john', {
-  credentials: 'include'
-});
-const users = await searchResponse.json();
-
-// Get project activities
-const activitiesResponse = await fetch('/api/projects/1/activities/', {
-  credentials: 'include'
-});
-const activities = await activitiesResponse.json();
-
-// Add custom activity
-const activityResponse = await fetch('/api/projects/1/activities/', {
-  method: 'POST',
-  credentials: 'include',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    action: 'Milestone Completed',
-    description: 'MVP development phase completed successfully'
-  })
-});
-```
-
-### React Hook Examples
+### JavaScript Integration
 
 ```javascript
-// Custom hook for project management
-const useProjects = () => {
-  const [projects, setProjects] = useState([]);
+// Ideas management hook
+const useIdeas = () => {
+  const [ideas, setIdeas] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchProjects = useCallback(async (filters = {}) => {
+  const fetchIdeas = useCallback(async (filters = {}) => {
     try {
       const params = new URLSearchParams(filters);
-      const response = await fetch(`/api/projects/?${params}`, {
+      const response = await fetch(`/api/ideas/?${params}`, {
         credentials: 'include'
       });
       const data = await response.json();
-      setProjects(data);
+      setIdeas(data);
     } catch (error) {
-      console.error('Failed to fetch projects:', error);
+      console.error('Failed to fetch ideas:', error);
     } finally {
       setLoading(false);
     }
   }, []);
 
-  const createProject = useCallback(async (projectData) => {
-    const response = await fetch('/api/projects/', {
+  const createIdea = useCallback(async (ideaData) => {
+    const response = await fetch('/api/ideas/', {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(projectData)
+      body: JSON.stringify(ideaData)
     });
     
     if (response.ok) {
-      fetchProjects(); // Refresh list
+      fetchIdeas(); // Refresh list
     }
     
     return response;
-  }, [fetchProjects]);
+  }, [fetchIdeas]);
 
-  return { projects, loading, fetchProjects, createProject };
+  return { ideas, loading, fetchIdeas, createIdea };
 };
 ```
+
+## Permission System
+
+### Ideas Permission Hierarchy
+
+1. **Owner** (Idea Creator)
+   - Full control over the idea
+   - Can edit all content
+   - Can manage team members
+   - Can delete the idea
+   - Can associate/disassociate projects
+
+2. **Editor**
+   - Can view and edit idea content
+   - Can add/edit notes and resources
+   - Can manage team members
+   - Cannot delete the idea
+
+3. **Contributor**
+   - Can view idea content
+   - Can add notes and resources
+   - Cannot edit existing content from others
+   - Cannot manage team members
+
+4. **Viewer**
+   - Can only view idea content
+   - Cannot modify or add content
+   - Cannot manage team members
 
 ## Rate Limiting & Performance
 
@@ -949,733 +1538,3 @@ const useProjects = () => {
 - **Permission Checks**: Enforced at both view and object level
 
 This documentation covers all implemented endpoints and provides a foundation for future API extensions.
-
-# Topic System Endpoints
-
-## Overview
-Topics serve as knowledge containers within projects, allowing teams to organize research, documentation, media, discussions, and resources into focused areas. Each topic can contain notes, links, media files, comments, and organizational tags.
-
-## Topic Management Endpoints
-
-### List Project Topics
-Get all topics for a specific project.
-
-```
-GET /api/projects/{project_id}/topics/
-```
-
-**Authentication**: Required
-**Permissions**: User must have read access to the project
-
-**Response** (200 OK):
-```json
-[
-  {
-    "id": 1,
-    "title": "Research & Documentation",
-    "description": "Gather research materials and create documentation",
-    "color": "#3B82F6",
-    "created_at": "2025-09-25T14:00:00Z",
-    "updated_at": "2025-09-25T16:30:00Z",
-    "created_by": {
-      "id": 1,
-      "first_name": "John",
-      "last_name": "Doe",
-      "email": "john.doe@example.com"
-    },
-    "notes_count": 3,
-    "links_count": 5,
-    "media_count": 2,
-    "comments_count": 8,
-    "tags": [
-      {
-        "id": 1,
-        "name": "high-priority",
-        "color": "#EF4444",
-        "created_at": "2025-09-25T15:00:00Z"
-      }
-    ]
-  }
-]
-```
-
-### Create Topic
-Create a new topic within a project.
-
-```
-POST /api/projects/{project_id}/topics/
-```
-
-**Authentication**: Required
-**Permissions**: User must have write access to the project (owner or editor)
-
-**Request Body**:
-```json
-{
-  "title": "Design System",
-  "description": "UI components, design tokens, and style guidelines",
-  "color": "#10B981"
-}
-```
-
-**Response** (201 Created): Created topic object with same format as list response
-
-### Get Topic Details
-Retrieve comprehensive information about a specific topic including all related content.
-
-```
-GET /api/projects/{project_id}/topics/{topic_id}/
-```
-
-**Authentication**: Required
-**Permissions**: User must have read access to the project
-
-**Response** (200 OK):
-```json
-{
-  "id": 1,
-  "title": "Research & Documentation",
-  "description": "Comprehensive research and documentation phase",
-  "color": "#3B82F6",
-  "created_at": "2025-09-25T14:00:00Z",
-  "updated_at": "2025-09-25T16:30:00Z",
-  "created_by": {
-    "id": 1,
-    "first_name": "John",
-    "last_name": "Doe",
-    "email": "john.doe@example.com"
-  },
-  "notes_count": 3,
-  "links_count": 5,
-  "media_count": 2,
-  "comments_count": 8,
-  "tags": [...],
-  "notes": [...],
-  "topic_links": [...],
-  "media": [...],
-  "comments": [...]
-}
-```
-
-### Update Topic
-Modify topic information.
-
-```
-PATCH /api/projects/{project_id}/topics/{topic_id}/
-```
-
-**Authentication**: Required
-**Permissions**: User must have write access to the project
-
-**Request Body**:
-```json
-{
-  "description": "Updated comprehensive research and documentation phase",
-  "color": "#8B5CF6"
-}
-```
-
-**Response** (200 OK): Updated topic object
-
-### Delete Topic
-Permanently delete a topic and all its content.
-
-```
-DELETE /api/projects/{project_id}/topics/{topic_id}/
-```
-
-**Authentication**: Required
-**Permissions**: User must have write access to the project
-
-**Response** (204 No Content): Empty response
-
-## Topic Notes Endpoints
-
-### List Topic Notes
-Get all notes within a specific topic.
-
-```
-GET /api/projects/{project_id}/topics/{topic_id}/notes/
-```
-
-**Authentication**: Required
-**Permissions**: User must have read access to the project
-
-**Response** (200 OK):
-```json
-[
-  {
-    "id": 1,
-    "title": "API Requirements",
-    "content": "# API Requirements\n\n- User authentication\n- Project management\n- Topic system with notes\n- File uploads",
-    "created_at": "2025-09-25T14:30:00Z",
-    "updated_at": "2025-09-25T16:00:00Z",
-    "created_by": {
-      "id": 1,
-      "first_name": "John",
-      "last_name": "Doe",
-      "email": "john.doe@example.com"
-    },
-    "last_edited_by": {
-      "id": 2,
-      "first_name": "Jane",
-      "last_name": "Smith",
-      "email": "jane.smith@example.com"
-    }
-  }
-]
-```
-
-### Create Topic Note
-Add a new note to a topic.
-
-```
-POST /api/projects/{project_id}/topics/{topic_id}/notes/
-```
-
-**Authentication**: Required
-**Permissions**: User must have write access to the project
-
-**Request Body**:
-```json
-{
-  "title": "Meeting Notes - Sprint Planning",
-  "content": "## Sprint Planning Meeting\n\n### Key Decisions\n- Focus on authentication system\n- Implement topic management\n- Set up automated testing"
-}
-```
-
-**Response** (201 Created): Created note object
-
-### Get Note Details
-Retrieve a specific note.
-
-```
-GET /api/projects/{project_id}/topics/{topic_id}/notes/{note_id}/
-```
-
-**Response** (200 OK): Single note object with same format as list response
-
-### Update Note
-Modify an existing note.
-
-```
-PATCH /api/projects/{project_id}/topics/{topic_id}/notes/{note_id}/
-```
-
-**Request Body**:
-```json
-{
-  "content": "Updated note content with additional information..."
-}
-```
-
-**Response** (200 OK): Updated note object with last_edited_by updated
-
-### Delete Note
-Remove a note from a topic.
-
-```
-DELETE /api/projects/{project_id}/topics/{topic_id}/notes/{note_id}/
-```
-
-**Response** (204 No Content): Empty response
-
-## Topic Links Endpoints
-
-### List Topic Links
-Get all links within a specific topic.
-
-```
-GET /api/projects/{project_id}/topics/{topic_id}/links/
-```
-
-**Response** (200 OK):
-```json
-[
-  {
-    "id": 1,
-    "title": "Django REST Framework Docs",
-    "url": "https://www.django-rest-framework.org/",
-    "description": "Official DRF documentation for API development",
-    "link_type": "reference",
-    "created_at": "2025-09-25T15:00:00Z",
-    "created_by": {
-      "id": 1,
-      "first_name": "John",
-      "last_name": "Doe",
-      "email": "john.doe@example.com"
-    }
-  }
-]
-```
-
-### Create Topic Link
-Add a new link to a topic.
-
-```
-POST /api/projects/{project_id}/topics/{topic_id}/links/
-```
-
-**Request Body**:
-```json
-{
-  "title": "React Documentation",
-  "url": "https://reactjs.org/docs/getting-started.html",
-  "description": "Official React documentation and tutorials",
-  "link_type": "reference"
-}
-```
-
-**Link Types**: `reference`, `resource`, `tool`, `inspiration`, `other`
-
-**Response** (201 Created): Created link object
-
-### Update Topic Link
-Modify an existing topic link.
-
-```
-PATCH /api/projects/{project_id}/topics/{topic_id}/links/{link_id}/
-```
-
-### Delete Topic Link
-Remove a link from a topic.
-
-```
-DELETE /api/projects/{project_id}/topics/{topic_id}/links/{link_id}/
-```
-
-## Topic Media Endpoints
-
-### List Topic Media
-Get all media files within a specific topic.
-
-```
-GET /api/projects/{project_id}/topics/{topic_id}/media/
-```
-
-**Response** (200 OK):
-```json
-[
-  {
-    "id": 1,
-    "title": "Design Mockups",
-    "file": "/media/topic_media/mockups.png",
-    "media_type": "image",
-    "description": "UI mockups for the authentication flow",
-    "file_size": 1048576,
-    "duration": null,
-    "uploaded_at": "2025-09-25T14:45:00Z",
-    "uploaded_by": {
-      "id": 1,
-      "first_name": "John",
-      "last_name": "Doe",
-      "email": "john.doe@example.com"
-    }
-  },
-  {
-    "id": 2,
-    "title": "Team Meeting Recording",
-    "file": "/media/topic_media/meeting_recording.mp3",
-    "media_type": "audio",
-    "description": "Sprint planning meeting discussion",
-    "file_size": 15728640,
-    "duration": "01:23:45",
-    "uploaded_at": "2025-09-25T16:00:00Z",
-    "uploaded_by": {
-      "id": 2,
-      "first_name": "Jane",
-      "last_name": "Smith",
-      "email": "jane.smith@example.com"
-    }
-  }
-]
-```
-
-### Upload Topic Media
-Add a new media file to a topic.
-
-```
-POST /api/projects/{project_id}/topics/{topic_id}/media/
-```
-
-**Content-Type**: `multipart/form-data`
-
-**Request Body**:
-```
-title: Project Architecture Diagram
-file: [binary file data]
-description: High-level system architecture overview
-```
-
-**Media Types**: Automatically detected (`image`, `video`, `audio`, `document`, `other`)
-
-**Response** (201 Created): Created media object
-
-### Update Media Details
-Modify media file metadata.
-
-```
-PATCH /api/projects/{project_id}/topics/{topic_id}/media/{media_id}/
-```
-
-**Request Body**:
-```json
-{
-  "title": "Updated Architecture Diagram",
-  "description": "Updated system architecture with new components"
-}
-```
-
-### Delete Media File
-Remove a media file from a topic.
-
-```
-DELETE /api/projects/{project_id}/topics/{topic_id}/media/{media_id}/
-```
-
-**Response** (204 No Content): Empty response
-
-## Topic Comments Endpoints
-
-### List Topic Comments
-Get all comments for a specific topic.
-
-```
-GET /api/projects/{project_id}/topics/{topic_id}/comments/
-```
-
-**Response** (200 OK):
-```json
-[
-  {
-    "id": 1,
-    "content": "We should prioritize the authentication system first, then move to the topic features.",
-    "created_at": "2025-09-25T15:30:00Z",
-    "updated_at": "2025-09-25T15:30:00Z",
-    "author": {
-      "id": 1,
-      "first_name": "John",
-      "last_name": "Doe",
-      "email": "john.doe@example.com"
-    },
-    "parent": null,
-    "replies": [
-      {
-        "id": 2,
-        "content": "Agreed! Authentication is the foundation for everything else.",
-        "created_at": "2025-09-25T15:45:00Z",
-        "updated_at": "2025-09-25T15:45:00Z",
-        "author": {
-          "id": 2,
-          "first_name": "Jane",
-          "last_name": "Smith",
-          "email": "jane.smith@example.com"
-        },
-        "parent": 1,
-        "replies": []
-      }
-    ]
-  }
-]
-```
-
-### Create Topic Comment
-Add a new comment to a topic.
-
-```
-POST /api/projects/{project_id}/topics/{topic_id}/comments/
-```
-
-**Request Body**:
-```json
-{
-  "content": "Great progress on this topic! The documentation is very comprehensive.",
-  "parent": null
-}
-```
-
-For replies, include parent comment ID:
-```json
-{
-  "content": "Thanks! Still working on the technical specifications section.",
-  "parent": 1
-}
-```
-
-**Response** (201 Created): Created comment object
-
-### Update Comment
-Modify an existing comment (only by comment author).
-
-```
-PATCH /api/projects/{project_id}/topics/{topic_id}/comments/{comment_id}/
-```
-
-**Permissions**: Only the comment author can edit their comments
-
-**Request Body**:
-```json
-{
-  "content": "Updated comment with additional thoughts..."
-}
-```
-
-### Delete Comment
-Remove a comment from a topic.
-
-```
-DELETE /api/projects/{project_id}/topics/{topic_id}/comments/{comment_id}/
-```
-
-**Permissions**: Comment author or project owners/editors can delete comments
-
-**Response** (204 No Content): Empty response
-
-## Topic Tags Endpoints
-
-### List Topic Tags
-Get all tags for a specific topic.
-
-```
-GET /api/projects/{project_id}/topics/{topic_id}/tags/
-```
-
-**Response** (200 OK):
-```json
-[
-  {
-    "id": 1,
-    "name": "urgent",
-    "color": "#EF4444",
-    "created_at": "2025-09-25T15:00:00Z"
-  },
-  {
-    "id": 2,
-    "name": "frontend",
-    "color": "#3B82F6",
-    "created_at": "2025-09-25T15:15:00Z"
-  }
-]
-```
-
-### Create Topic Tag
-Add a new tag to a topic.
-
-```
-POST /api/projects/{project_id}/topics/{topic_id}/tags/
-```
-
-**Request Body**:
-```json
-{
-  "name": "backend",
-  "color": "#10B981"
-}
-```
-
-**Response** (201 Created): Created tag object
-
-### Update Tag
-Modify an existing tag.
-
-```
-PATCH /api/projects/{project_id}/topics/{topic_id}/tags/{tag_id}/
-```
-
-**Request Body**:
-```json
-{
-  "name": "high-priority",
-  "color": "#F59E0B"
-}
-```
-
-### Delete Tag
-Remove a tag from a topic.
-
-```
-DELETE /api/projects/{project_id}/topics/{topic_id}/tags/{tag_id}/
-```
-
-**Response** (204 No Content): Empty response
-
-## Usage Examples
-
-### Complete Topic Workflow
-
-```bash
-# Create a topic
-curl -b cookies.txt -X POST http://localhost:8000/api/projects/1/topics/ \
-  -H "Content-Type: application/json" \
-  -d '{
-    "title": "User Authentication Research",
-    "description": "Research authentication methods and implementation approaches",
-    "color": "#6366F1"
-  }'
-
-# Add a note to the topic
-curl -b cookies.txt -X POST http://localhost:8000/api/projects/1/topics/1/notes/ \
-  -H "Content-Type: application/json" \
-  -d '{
-    "title": "OAuth 2.0 Implementation",
-    "content": "## OAuth 2.0 Flow\n\n1. Authorization Request\n2. Authorization Grant\n3. Access Token Request\n4. Protected Resource Access"
-  }'
-
-# Add reference links
-curl -b cookies.txt -X POST http://localhost:8000/api/projects/1/topics/1/links/ \
-  -H "Content-Type: application/json" \
-  -d '{
-    "title": "OAuth 2.0 RFC",
-    "url": "https://tools.ietf.org/html/rfc6749",
-    "description": "Official OAuth 2.0 specification",
-    "link_type": "reference"
-  }'
-
-# Upload a diagram
-curl -b cookies.txt -X POST http://localhost:8000/api/projects/1/topics/1/media/ \
-  -F "title=Authentication Flow Diagram" \
-  -F "description=Visual representation of the OAuth flow" \
-  -F "file=@auth_flow.png"
-
-# Add a comment for discussion
-curl -b cookies.txt -X POST http://localhost:8000/api/projects/1/topics/1/comments/ \
-  -H "Content-Type: application/json" \
-  -d '{
-    "content": "Should we implement JWT tokens for session management?"
-  }'
-
-# Tag the topic for organization
-curl -b cookies.txt -X POST http://localhost:8000/api/projects/1/topics/1/tags/ \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "security",
-    "color": "#EF4444"
-  }'
-```
-
-### JavaScript/React Examples
-
-```javascript
-// Topic management hook
-const useTopic = (projectId, topicId) => {
-  const [topic, setTopic] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  const fetchTopic = useCallback(async () => {
-    try {
-      const response = await fetch(
-        `/api/projects/${projectId}/topics/${topicId}/`,
-        { credentials: 'include' }
-      );
-      const data = await response.json();
-      setTopic(data);
-    } catch (error) {
-      console.error('Failed to fetch topic:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, [projectId, topicId]);
-
-  const addNote = useCallback(async (noteData) => {
-    const response = await fetch(
-      `/api/projects/${projectId}/topics/${topicId}/notes/`,
-      {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(noteData)
-      }
-    );
-    
-    if (response.ok) {
-      fetchTopic(); // Refresh topic data
-    }
-    
-    return response;
-  }, [projectId, topicId, fetchTopic]);
-
-  const addComment = useCallback(async (content, parentId = null) => {
-    const response = await fetch(
-      `/api/projects/${projectId}/topics/${topicId}/comments/`,
-      {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content, parent: parentId })
-      }
-    );
-    
-    if (response.ok) {
-      fetchTopic();
-    }
-    
-    return response;
-  }, [projectId, topicId, fetchTopic]);
-
-  return { 
-    topic, 
-    loading, 
-    fetchTopic, 
-    addNote, 
-    addComment 
-  };
-};
-
-// Media upload component
-const MediaUpload = ({ projectId, topicId, onUpload }) => {
-  const handleFileUpload = async (file, title, description) => {
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('title', title);
-    formData.append('description', description);
-
-    try {
-      const response = await fetch(
-        `/api/projects/${projectId}/topics/${topicId}/media/`,
-        {
-          method: 'POST',
-          credentials: 'include',
-          body: formData
-        }
-      );
-
-      if (response.ok) {
-        const mediaFile = await response.json();
-        onUpload(mediaFile);
-      }
-    } catch (error) {
-      console.error('Upload failed:', error);
-    }
-  };
-
-  return (
-    // Upload component JSX
-  );
-};
-```
-
-## Topic System Features
-
-### Content Organization
-- **Topics**: Main containers for organizing project knowledge
-- **Notes**: Rich text content with collaborative editing
-- **Links**: Categorized external resources and references
-- **Media**: File uploads with automatic type detection
-- **Comments**: Threaded discussions with nested replies
-- **Tags**: Visual organization with custom colors
-
-### Collaboration Features
-- **Activity Logging**: All topic operations logged automatically
-- **Edit Tracking**: Note modifications track last editor
-- **Permission Control**: Role-based access (owner/editor/viewer)
-- **Real-time Updates**: Session-based updates for team collaboration
-
-### Content Types Supported
-- **Text**: Markdown-formatted notes and comments
-- **Images**: PNG, JPG, GIF, SVG formats
-- **Videos**: MP4, WebM, MOV formats
-- **Audio**: MP3, WAV, OGG formats
-- **Documents**: PDF, DOC, TXT, Markdown files
-- **Links**: Web resources with categorization
-
-This topic system transforms projects into comprehensive knowledge bases where teams can collaborate effectively on research, documentation, and resource sharing.
