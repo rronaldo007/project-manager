@@ -42,26 +42,43 @@ const SidebarNav = ({ isOpen, activeTab, onTabChange, onLogout }) => {
   ];
 
   return (
-    <nav className="flex-1 px-4 py-6 space-y-2">
-      {navItems.map((item) => (
+    <div className="flex flex-col h-full">
+      <nav className="flex-1 px-4 py-6 space-y-2">
+        {navItems.map((item) => (
+          <button
+            key={item.id}
+            onClick={() => onTabChange(item.id)}
+            className={`w-full flex items-center space-x-3 px-4 py-3 text-left rounded-xl transition-all duration-200 group ${
+              activeTab === item.id
+                ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg'
+                : 'text-gray-400 hover:text-white hover:bg-gray-700/50'
+            }`}
+          >
+            <span className={`transition-colors ${activeTab === item.id ? 'text-white' : 'text-gray-400 group-hover:text-white'}`}>
+              {item.icon}
+            </span>
+            {isOpen && (
+              <span className="font-medium">{item.label}</span>
+            )}
+          </button>
+        ))}
+      </nav>
+
+      {/* Logout Button */}
+      <div className="px-4 pb-6">
         <button
-          key={item.id}
-          onClick={() => onTabChange(item.id)}
-          className={`w-full flex items-center space-x-3 px-4 py-3 text-left rounded-xl transition-all duration-200 group ${
-            activeTab === item.id
-              ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg'
-              : 'text-gray-400 hover:text-white hover:bg-gray-700/50'
-          }`}
+          onClick={onLogout}
+          className="w-full flex items-center space-x-3 px-4 py-3 text-left rounded-xl transition-all duration-200 text-red-400 hover:text-red-300 hover:bg-red-500/10"
         >
-          <span className={`transition-colors ${activeTab === item.id ? 'text-white' : 'text-gray-400 group-hover:text-white'}`}>
-            {item.icon}
-          </span>
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+          </svg>
           {isOpen && (
-            <span className="font-medium">{item.label}</span>
+            <span className="font-medium">Logout</span>
           )}
         </button>
-      ))}
-    </nav>
+      </div>
+    </div>
   );
 };
 

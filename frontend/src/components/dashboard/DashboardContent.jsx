@@ -3,14 +3,17 @@ import Welcomepage from './Welcomepage';
 import UserProfile from './UserProfile';
 import ProjectsPage from '../../pages/ProjectsPage';
 import IdeasPage from '../../pages/IdeasPage';
+import IdeaPage from '../../pages/IdeaPage';
 import ProjectPage from '../../pages/ProjectPage';
 
 const DashboardContent = ({ 
   activeTab, 
   selectedProjectId,
+  selectedIdeaId,
   onProjectSelect, 
+  onIdeaSelect,
   onBackToProjects,
-  onLogout  // Add logout prop
+  onBackToIdeas
 }) => {
   const renderContent = () => {
     switch (activeTab) {
@@ -18,7 +21,23 @@ const DashboardContent = ({
         return <Welcomepage />;
         
       case 'ideas':
-        return <IdeasPage />;
+        return (
+          <IdeasPage 
+            onIdeaSelect={onIdeaSelect}
+          />
+        );
+        
+      case 'idea-detail':
+        if (selectedIdeaId) {
+          return (
+            <IdeaPage
+              ideaId={selectedIdeaId}
+              onBack={onBackToIdeas}
+            />
+          );
+        }
+        setTimeout(() => onBackToIdeas(), 0);
+        return <div>Loading...</div>;
         
       case 'projects':
         return (
@@ -28,11 +47,7 @@ const DashboardContent = ({
         );
         
       case 'profile':
-        return <UserProfile onLogout={onLogout} />;  // Pass logout to profile
-        
-      case 'logout':  // Add logout case
-        onLogout();
-        return <div>Logging out...</div>;
+        return <UserProfile />;
         
       case 'project-detail':
         if (selectedProjectId) {
