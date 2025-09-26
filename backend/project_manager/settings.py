@@ -21,6 +21,7 @@ INSTALLED_APPS = [
 INSTALLED_APPS += [
     'apps.authentication',
     'apps.projects',
+    'apps.ideas',
 ]
 
 MIDDLEWARE = [

@@ -2,21 +2,23 @@ import React from 'react';
 import Welcomepage from './Welcomepage';
 import UserProfile from './UserProfile';
 import ProjectsPage from '../../pages/ProjectsPage';
+import IdeasPage from '../../pages/IdeasPage';
 import ProjectPage from '../../pages/ProjectPage';
 
 const DashboardContent = ({ 
   activeTab, 
-  selectedProjectId, 
+  selectedProjectId,
   onProjectSelect, 
-  onBackToProjects 
+  onBackToProjects,
+  onLogout  // Add logout prop
 }) => {
   const renderContent = () => {
     switch (activeTab) {
       case 'dashboard':
         return <Welcomepage />;
         
-      case 'profile':
-        return <UserProfile />;
+      case 'ideas':
+        return <IdeasPage />;
         
       case 'projects':
         return (
@@ -24,6 +26,13 @@ const DashboardContent = ({
             onProjectSelect={onProjectSelect}
           />
         );
+        
+      case 'profile':
+        return <UserProfile onLogout={onLogout} />;  // Pass logout to profile
+        
+      case 'logout':  // Add logout case
+        onLogout();
+        return <div>Logging out...</div>;
         
       case 'project-detail':
         if (selectedProjectId) {
@@ -34,7 +43,6 @@ const DashboardContent = ({
             />
           );
         }
-        // If no project selected but tab is project-detail, go back to projects
         setTimeout(() => onBackToProjects(), 0);
         return <div>Loading...</div>;
         
