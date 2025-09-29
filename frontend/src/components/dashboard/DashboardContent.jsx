@@ -5,15 +5,20 @@ import ProjectsPage from '../../pages/ProjectsPage';
 import IdeasPage from '../../pages/IdeasPage';
 import IdeaPage from '../../pages/IdeaPage';
 import ProjectPage from '../../pages/ProjectPage';
+import TasksPage from '../../pages/TasksPage';
+import TaskDetailPage from '../../pages/TaskDetailPage';
 
 const DashboardContent = ({ 
   activeTab, 
   selectedProjectId,
   selectedIdeaId,
+  selectedTaskId,
   onProjectSelect, 
   onIdeaSelect,
+  onTaskSelect,
   onBackToProjects,
-  onBackToIdeas
+  onBackToIdeas,
+  onBackToTasks
 }) => {
   const renderContent = () => {
     switch (activeTab) {
@@ -45,6 +50,25 @@ const DashboardContent = ({
             onProjectSelect={onProjectSelect}
           />
         );
+        
+      case 'tasks':
+        return (
+          <TasksPage 
+            onTaskSelect={onTaskSelect}
+          />
+        );
+        
+      case 'task-detail':
+        if (selectedTaskId) {
+          return (
+            <TaskDetailPage
+              taskId={selectedTaskId}
+              onBack={onBackToTasks}
+            />
+          );
+        }
+        setTimeout(() => onBackToTasks(), 0);
+        return <div>Loading...</div>;
         
       case 'profile':
         return <UserProfile />;

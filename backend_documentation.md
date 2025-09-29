@@ -1538,3 +1538,303 @@ const useIdeas = () => {
 - **Permission Checks**: Enforced at both view and object level
 
 This documentation covers all implemented endpoints and provides a foundation for future API extensions.
+
+# Task Management System Documentation
+
+## Overview
+
+A comprehensive task management system integrated into the Project Manager application, supporting flexible task organization across multiple contexts: standalone personal tasks, project-based tasks, and idea-linked tasks.
+
+## Architecture
+
+### Core Components
+
+- **Models**: Django models for tasks, lists, comments, attachments, activities, time logs, and templates
+- **API**: RESTful endpoints with full CRUD operations and advanced features
+- **Permissions**: Role-based access control integrated with existing project/idea permissions
+- **Signals**: Automatic business logic for time tracking and activity logging
+
+### Database Schema
+
+```
+TaskList
+├── project (optional) - Links to existing Project model
+├── name, description, position
+└── created_by, timestamps
+
+Task
+├── Core fields: title, description, status, priority
+├── Context: project, idea, task_list (all optional)
+├── Assignment: assignee, created_by
+├── Hierarchy: parent_task, dependencies (M2M)
+├── Tracking: due_date, estimated_hours, actual_hours
+└── Organization: position, tags
+
+TaskComment, TaskAttachment, TaskActivity, TaskTimeLog, TaskTemplate
+```
+
+## Task Contexts
+
+### 1. Standalone/Personal Tasks
+- Independent tasks not tied to projects or ideas
+- Perfect for personal reminders and general to-dos
+- Only accessible to creator and assignee
+
+### 2. Project Tasks
+- Tasks associated with specific projects
+- Inherit project permissions and access controls
+- Can be organized in project-specific task lists
+
+### 3. Idea Tasks
+- Tasks linked to specific ideas for implementation tracking
+- Follow idea collaboration permissions
+- Help bridge the gap between ideation and execution
+
+### 4. Project-Idea Tasks
+- Tasks that belong to both a project AND an idea
+- Must satisfy permissions for both contexts
+- Useful for tracking idea implementation within project scope
+
+## API Endpoints
+
+### Core Endpoints
+
+```
+# Personal/Cross-context tasks
+GET/POST    /api/tasks/tasks/                    # All user tasks
+GET         /api/tasks/tasks/dashboard/          # Task dashboard
+GET         /api/tasks/tasks/{id}/               # Task details
+PATCH       /api/tasks/tasks/{id}/               # Update task
+POST        /api/tasks/tasks/{id}/complete/      # Mark complete
+
+# Project-specific tasks
+GET/POST    /api/tasks/projects/{id}/tasks/      # Project tasks
+GET         /api/tasks/projects/{id}/tasks/stats/ # Project task stats
+
+# Task templates
+GET/POST    /api/tasks/templates/                # Task templates
+POST        /api/tasks/templates/{id}/create_task/ # Create from template
+
+# Task collaboration
+GET/POST    /api/tasks/tasks/{id}/comments/      # Task comments
+GET/POST    /api/tasks/tasks/{id}/attachments/   # File attachments
+GET/POST    /api/tasks/tasks/{id}/time-logs/     # Time tracking
+```
+
+### Request/Response Examples
+
+#### Create Personal Task
+```bash
+POST /api/tasks/tasks/
+{
+  "title": "Learn Django",
+  "description": "Study Django framework",
+  "priority": "medium",
+  "tags": "learning,django"
+}
+```
+
+#### Create Project Task
+```bash
+POST /api/tasks/projects/1/tasks/
+{
+  "title": "Implement authentication",
+  "description": "Add JWT auth system",
+  "priority": "high",
+  "assignee_id": 2,
+  "tags": "backend,auth"
+}
+```
+
+#### Task Response
+```json
+{
+  "id": 1,
+  "title": "Learn Django",
+  "status": "todo",
+  "priority": "medium",
+  "context_type": "standalone",
+  "context_display": "Personal Task",
+  "tag_list": ["learning", "django"],
+  "is_overdue": false,
+  "progress_percentage": 0,
+  "created_by": {
+    "id": 1,
+    "first_name": "John",
+    "last_name": "Doe"
+  },
+  "created_at": "2025-09-27T15:00:00Z"
+}
+```
+
+## Features
+
+### Task Organization
+- **Status Management**: todo, in_progress, in_review, done, blocked, cancelled
+- **Priority Levels**: low, medium, high, urgent
+- **Due Dates**: Optional deadlines with overdue detection
+- **Tags**: Flexible categorization system
+- **Task Lists**: Kanban-style organization
+- **Hierarchy**: Parent tasks and subtasks
+- **Dependencies**: Task blocking relationships
+
+### Collaboration
+- **Comments**: Threaded discussions on tasks
+- **Attachments**: File uploads per task
+- **Activity Logs**: Complete audit trail of changes
+- **Team Assignment**: Role-based task assignment
+- **Time Tracking**: Log actual time spent on tasks
+
+### Advanced Features
+- **Templates**: Reusable task templates for common workflows
+- **Bulk Operations**: Update multiple tasks simultaneously
+- **Dashboard**: Comprehensive statistics and analytics
+- **Cross-Context Search**: Find tasks across all contexts
+- **Context Migration**: Move tasks between personal/project/idea contexts
+
+### Automatic Behaviors
+- **Time Calculation**: Auto-update actual hours from time logs
+- **Completion Timestamps**: Auto-set completion time when status = done
+- **Activity Logging**: Auto-log dependency changes and major updates
+- **Progress Tracking**: Calculate progress based on subtask completion
+
+## Permission Model
+
+### Standalone Tasks
+- **Creator**: Full access to task
+- **Assignee**: Can view and update status/time
+- **Others**: No access
+
+### Project Tasks
+- **Project Owner**: Full task management
+- **Project Editors**: Create, edit, delete tasks
+- **Project Viewers**: View tasks only
+- **Task Assignee**: Update status and log time regardless of project role
+
+### Idea Tasks
+- **Idea Owner**: Full task management
+- **Idea Editors**: Create, edit, delete tasks
+- **Idea Contributors**: Create tasks and update assigned tasks
+- **Idea Viewers**: View tasks only
+
+### Project-Idea Tasks
+- Must satisfy permissions for BOTH project AND idea
+- Inherits most restrictive permission from either context
+
+## Usage Patterns
+
+### Personal Task Management
+```bash
+# Create personal task list
+POST /api/tasks/personal-task-lists/
+{"name": "Learning Goals"}
+
+# Add personal task
+POST /api/tasks/tasks/
+{"title": "Learn React", "priority": "medium"}
+```
+
+### Project Integration
+```bash
+# Create project task from template
+POST /api/tasks/templates/1/create_task/
+{"project_id": 1, "task_list_id": 2}
+
+# Update project task
+PATCH /api/tasks/tasks/5/
+{"status": "in_progress", "assignee_id": 3}
+```
+
+### Context Migration
+```bash
+# Convert personal task to project task
+PATCH /api/tasks/tasks/1/
+{"project_id": 1, "task_list_id": 2}
+
+# Link existing project task to idea
+PATCH /api/tasks/tasks/2/
+{"idea_id": 5}
+```
+
+## Implementation Status
+
+### ✅ Completed
+- Core CRUD operations for all models
+- Flexible context associations (standalone/project/idea)
+- Task status and priority management
+- Comments and file attachments
+- Time tracking and activity logging
+- Task templates system
+- Dashboard with statistics
+- Role-based permissions
+- API documentation and testing
+
+### 🔄 Tested & Working
+- Personal task creation and management
+- Project task creation and updates
+- Task completion and status changes
+- Comment system
+- Template creation and usage
+- Dashboard analytics
+- Cross-context task listing
+
+### ⚠️ Minor Issues
+- Bulk update operations (endpoint exists but needs refinement)
+- Some URL pattern inconsistencies for advanced features
+
+### 📋 Next Steps
+1. Resolve bulk operation URL patterns
+2. Build React frontend components
+3. Integrate with existing frontend architecture
+4. Add drag-and-drop task organization
+5. Implement real-time updates with WebSockets
+
+## Integration Points
+
+### With Existing Systems
+- **Projects**: Tasks can belong to projects and inherit permissions
+- **Ideas**: Tasks can implement specific ideas and track progress
+- **Users**: Leverages existing user authentication and authorization
+- **File System**: Integrates with existing file upload infrastructure
+
+### Frontend Integration
+- Follows established React component patterns
+- Uses existing authentication and state management
+- Integrates with memory system for persistent UI state
+- Compatible with existing API service layer
+
+## Database Migrations
+
+```bash
+# Create and apply migrations
+python manage.py makemigrations tasks
+python manage.py migrate
+
+# Create default templates
+python manage.py create_task_templates
+```
+
+## Configuration
+
+Add to `settings.py`:
+```python
+INSTALLED_APPS = [
+    # ...
+    'apps.tasks',
+]
+```
+
+Add to main `urls.py`:
+```python
+path('api/tasks/', include('apps.tasks.urls')),
+```
+
+## Security Considerations
+
+- **CSRF Protection**: All state-changing operations protected
+- **Permission Validation**: Context-aware permission checking
+- **File Upload Security**: File type validation for attachments
+- **SQL Injection Protection**: ORM-based queries throughout
+- **Access Control**: Multi-level permission inheritance
+
+The task management system provides enterprise-level functionality while maintaining the flexibility and user-friendliness expected in modern project management tools.

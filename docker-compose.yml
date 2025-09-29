@@ -27,7 +27,7 @@ services:
 
   frontend:
     build: ./frontend
-    command: npm run dev
+    command: npm run dev -- --host 0.0.0.0
     volumes:
       - ./frontend:/app
       - /app/node_modules
@@ -37,7 +37,6 @@ services:
       - backend
     environment:
       - CHOKIDAR_USEPOLLING=true
-      - REACT_APP_API_URL=http://localhost:8000
 
 volumes:
   postgres_data:

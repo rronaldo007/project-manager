@@ -7,7 +7,8 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/auth/', include('apps.authentication.urls')),
     path('api/projects/', include('apps.projects.urls')),
-    path('api/ideas/', include('apps.ideas.urls')),  # Added ideas app URLs
+    path('api/ideas/', include('apps.ideas.urls')),
+    path('api/tasks/', include('apps.tasks.urls')),
 ]
 
 if settings.DEBUG:

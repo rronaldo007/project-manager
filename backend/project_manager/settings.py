@@ -22,6 +22,7 @@ INSTALLED_APPS += [
     'apps.authentication',
     'apps.projects',
     'apps.ideas',
+    'apps.tasks',
 ]
 
 MIDDLEWARE = [
@@ -121,3 +122,7 @@ SESSION_COOKIE_SAMESITE = 'Lax'
 
 # Ensure sessions are stored in database
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+]
