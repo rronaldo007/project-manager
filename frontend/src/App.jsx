@@ -1,10 +1,10 @@
 import React from 'react';
 import { AuthProvider, useAuth } from './hooks/useAuth';
-import AuthPage from './pages/AuthPage';
+import LandingPage from './pages/LandingPage';
 import Dashboard from './components/Dashboard';
 
 const AppContent = () => {
-  const { user, loading } = useAuth();
+  const { user, loading, login } = useAuth();
 
   if (loading) {
     return (
@@ -17,7 +17,7 @@ const AppContent = () => {
     );
   }
 
-  return user ? <Dashboard /> : <AuthPage />;
+  return user ? <Dashboard /> : <LandingPage onLoginSuccess={login} />;
 };
 
 function App() {

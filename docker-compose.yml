@@ -2,15 +2,21 @@ version: '3.8'
 
 services:
   db:
-    image: postgres:15
+    image: mariadb:10.11
     volumes:
-      - postgres_data:/var/lib/postgresql/data/
+      - mariadb_data:/var/lib/mysql
     environment:
-      POSTGRES_DB: project_manager
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: projects
+      MYSQL_USER: ronaldo
+      MYSQL_PASSWORD: ronaldo
     ports:
-      - "5432:5432"
+      - "3307:3306"  # Changed external port to 3307
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   backend:
     build: ./backend
@@ -20,10 +26,15 @@ services:
     ports:
       - "8000:8000"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     environment:
       DEBUG: 1
-      DATABASE_URL: postgresql://postgres:postgres@db:5432/project_manager
+      DB_NAME: projects
+      DB_USER: ronaldo
+      DB_PASSWORD: ronaldo
+      DB_HOST: db
+      DB_PORT: 3306  # Internal port stays 3306
 
   frontend:
     build: ./frontend
@@ -39,4 +50,4 @@ services:
       - CHOKIDAR_USEPOLLING=true
 
 volumes:
-  postgres_data:
+  mariadb_data:
