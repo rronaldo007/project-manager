@@ -13,7 +13,7 @@ const ProjectTopics = ({ projectId, canEdit, onTopicsChange, onNavigateToTopic }
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [viewMode, setViewMode] = useTopicViewMemory('grid'); // Use memory hook
   const [uploading, setUploading] = useState(false);
-  const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+  const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
   useEffect(() => {
     if (projectId) {

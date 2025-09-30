@@ -4,7 +4,7 @@ const TopicTags = ({ topic, projectId, canEdit, onRefresh }) => {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [formData, setFormData] = useState({ name: '', color: '#3B82F6' });
   const [loading, setLoading] = useState(false);
-  const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+  const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
   const colorOptions = [
     { name: 'Blue', value: '#3B82F6' },

@@ -10,7 +10,7 @@ const IdeaDetailPage = ({ ideaId, onBack }) => {
   const [showAddResource, setShowAddResource] = useState(false);
 
   const { user } = useAuth();
-  const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+  const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
   useEffect(() => {
     if (ideaId) {

@@ -16,7 +16,7 @@ const ProjectsPage = ({ onProjectSelect }) => {
   const [selectedProject, setSelectedProject] = useState(null);
   const { user } = useAuth();
 
-  const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+  const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
   const fetchProjects = async () => {
     try {

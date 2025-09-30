@@ -5,7 +5,7 @@ const TopicComments = ({ topic, projectId, canEdit, onRefresh }) => {
   const [replyingTo, setReplyingTo] = useState(null);
   const [newComment, setNewComment] = useState('');
   const [loading, setLoading] = useState(false);
-  const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+  const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
   const handleCreateComment = async (parentId = null) => {
     if (!newComment.trim()) return;

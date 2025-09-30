@@ -9,7 +9,7 @@ const TopicLinks = ({ topic, projectId, canEdit, onRefresh }) => {
     link_type: 'reference'
   });
   const [loading, setLoading] = useState(false);
-  const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+  const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
   const linkTypes = [
     { value: 'reference', label: 'Reference', color: '#3B82F6' },

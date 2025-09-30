@@ -17,7 +17,7 @@ const ProjectFiles = ({ projectId, canEdit }) => {
   const [viewMode, setViewMode] = useTopicViewMemory('grid'); // Use memory hook instead of useState
   const [selectedFile, setSelectedFile] = useState(null);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
-  const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+  const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
   useEffect(() => {
     fetchFiles();

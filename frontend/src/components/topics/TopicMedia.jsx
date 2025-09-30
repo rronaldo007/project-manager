@@ -5,7 +5,7 @@ const TopicMedia = ({ topic, projectId, canEdit, onRefresh }) => {
   const [uploading, setUploading] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [formData, setFormData] = useState({ title: '', description: '' });
-  const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+  const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
   const handleFileUpload = async (e) => {
     e.preventDefault();

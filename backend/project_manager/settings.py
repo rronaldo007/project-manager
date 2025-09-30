@@ -131,4 +131,10 @@ CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     f"http://{os.environ.get('ALLOWED_HOSTS', 'localhost').split(',')[0]}",
+    "http://46.101.85.91"
 ]
+
+SESSION_COOKIE_SAMESITE = 'Lax'
+SESSION_COOKIE_SECURE = False  # True if you move to HTTPS
+CSRF_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_SECURE = False     # True if HTTPS

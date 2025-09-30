@@ -7,7 +7,7 @@ const LoginForm = ({ onSuccess }) => {
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+  const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
 
   const handleSubmit = async (e) => {

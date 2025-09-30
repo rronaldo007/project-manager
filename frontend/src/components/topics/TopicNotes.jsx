@@ -5,7 +5,7 @@ const TopicNotes = ({ topic, projectId, canEdit, onRefresh }) => {
   const [editingNote, setEditingNote] = useState(null);
   const [formData, setFormData] = useState({ title: '', content: '' });
   const [loading, setLoading] = useState(false);
-  const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+  const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
   const handleCreateNote = async (e) => {
     e.preventDefault();

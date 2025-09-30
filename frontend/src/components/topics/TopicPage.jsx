@@ -12,7 +12,7 @@ const TopicPage = ({ topicId, projectId, canEdit, onBack, onUpdate, onDelete }) 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showEditModal, setShowEditModal] = useState(false);
-  const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+  const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
   useEffect(() => {
     if (topicId) {

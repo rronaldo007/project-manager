@@ -8,7 +8,7 @@ const ProjectUsersManagement = ({ projectId, project, isOwner, onClose }) => {
   const [searching, setSearching] = useState(false);
   const [error, setError] = useState('');
   const [selectedRole, setSelectedRole] = useState('viewer');
-  const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+  const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
   useEffect(() => {
     fetchMembers();

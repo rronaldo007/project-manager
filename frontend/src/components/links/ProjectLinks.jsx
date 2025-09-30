@@ -18,7 +18,7 @@ const ProjectLinks = ({ projectId, canEdit }) => {
   });
   const [error, setError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
-  const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+  const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
   useEffect(() => {
     fetchLinks();

@@ -5,7 +5,7 @@ const MembersSection = ({ idea, onShowAddMember, canManageMembers }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+  const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
   useEffect(() => {
     if (idea?.id) {

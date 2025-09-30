@@ -14,7 +14,7 @@ const ActivityTimeline = ({ projectId }) => {
   const fetchActivities = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`http://localhost:8000/api/projects/${projectId}/activities/`, {
+      const response = await fetch(`/api/api/projects/${projectId}/activities/`, {
         method: 'GET',
         credentials: 'include',
         headers: {
@@ -48,7 +48,7 @@ const ActivityTimeline = ({ projectId }) => {
 
     try {
       setAddingComment(true);
-      const response = await fetch(`http://localhost:8000/api/projects/${projectId}/activities/`, {
+      const response = await fetch(`/api/api/projects/${projectId}/activities/`, {
         method: 'POST',
         credentials: 'include',
         headers: {

@@ -64,7 +64,7 @@ export const AuthProvider = ({ children }) => {
     const savedUser = loadUserFromMemory();
     
     try {
-      const response = await fetch('http://localhost:8000/api/auth/profile/', {
+      const response = await fetch('/api/api/auth/profile/', {
         method: 'GET',
         credentials: 'include',
         headers: {
@@ -93,7 +93,7 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (credentials) => {
     try {
-      const response = await fetch('http://localhost:8000/api/auth/login/', {
+      const response = await fetch('/api/api/auth/login/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -121,7 +121,7 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (userData) => {
     try {
-      const response = await fetch('http://localhost:8000/api/auth/register/', {
+      const response = await fetch('/api/api/auth/register/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -150,7 +150,7 @@ export const AuthProvider = ({ children }) => {
   const logout = async () => {
     console.log('Logout function called');
     try {
-      const response = await fetch('http://localhost:8000/api/auth/logout/', {
+      const response = await fetch('/api/api/auth/logout/', {
         method: 'POST',
         credentials: 'include',
         headers: {
