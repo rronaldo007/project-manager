@@ -3,5 +3,9 @@ djangorestframework==3.14.0
 django-cors-headers==4.3.1
 django-filter==23.3
 Pillow==10.1.0
+
+# MySQL via pure-Python driver (no system compiler needed)
 pymysql==1.1.1
+
+# Env loader (you use load_dotenv in settings)
 python-dotenv==1.0.1

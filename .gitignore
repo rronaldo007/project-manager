@@ -1,3 +1,25 @@
-/ai-contexts
-cookies.txt
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
 
+# Django collectstatic
+backend/staticfiles/
+
+# SQLite (if you ever use it locally)
+*.sqlite3
+
+# --- Node ---
+frontend/node_modules/
+frontend/dist/
+
+# --- Env files (consider committing a .env.example instead) ---
+.env
+backend/.env
+
+# --- OS/editor noise ---
+.DS_Store
+*.swp
+*.swo
